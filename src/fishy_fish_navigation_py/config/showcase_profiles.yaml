@@ -1,0 +1,44 @@
+showcase_navigation:
+  ros__parameters:
+    # Select with: mode:=showcase|explorer|patrol|dance|interactive
+    mode: showcase
+    loop: false
+
+    # Shared choreography behavior.
+    pause_duration: 1.5
+    action_server_timeout: 20.0
+    goal_retry_count: 2
+    goal_retry_delay: 1.0
+    feedback_interval: 1.0
+    path_samples: 140
+    home: [0.0, 0.0, 0.0]
+
+    # The wall collisions are centered at +/-2.05 m and are 0.1 m thick,
+    # leaving an approximately 4 x 4 m navigable interior.
+    aquarium_half_width: 2.0
+    aquarium_half_height: 2.0
+    robot_radius: 0.22
+    safety_clearance: 0.12
+
+    # Cylinder (1.0, 0.8, radius 0.2) and a conservative circular envelope
+    # around the 0.3 x 0.3 m box at (-1.3, 0.85).
+    obstacle_centers: [1.0, 0.8, -1.3, 0.85]
+    obstacle_radii: [0.2, 0.22]
+
+    # Patrol goals are planned by Nav2, which routes around mapped obstacles.
+    patrol_points: [
+      1.45, -1.45,
+      1.45, 1.45,
+      -1.45, 1.45,
+      -1.45, -1.45
+    ]
+
+    # A goal count of zero keeps explorer mode running until Ctrl+C.
+    explorer_seed: 42
+    explorer_goal_count: 0
+
+    # Interactive mode accepts RViz-style goals and safe standoff poses from
+    # a future object-localization node. The current camera detector does not
+    # yet estimate object positions in the map frame.
+    interactive_goal_topic: /goal_pose
+    detected_object_goal_topic: /detected_object_goal

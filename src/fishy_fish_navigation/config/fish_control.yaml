@@ -1,0 +1,17 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 50 # Hz, matches the world's 0.02-second physics step
+
+    fish_joint_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+fish_joint_controller:
+  ros__parameters:
+    joints:
+      - joint_1
+      - joint_2
+      - joint_3
+    interface_name: position
