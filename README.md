@@ -1,10 +1,32 @@
 # 🐟 Swishy: A Bio-inspired Robotic Fish with Undulatory Locomotion and Autonomous SLAM-based Navigation using ROS2
 
-**Biological inspiration and motion model.** Swishy is a research-oriented simulation platform for studying how body-caudal-fin (BCF) swimming principles can be coupled with autonomous robotic navigation. Fish generate propulsive and steering motions by passing a wave of lateral curvature from the body toward the caudal fin; Swishy approximates this behavior across three articulated joints as $q_i(t)=b_i\kappa(t)+a_iA(s)\sin(\phi(t)-i\Delta\phi)$, with $\dot{\phi}=2\pi f(s)$. Here, $A(s)$ and $f(s)$ increase with commanded activity, $\kappa$ introduces a turning bias, and the posteriorly increasing coefficients $a_i$ produce larger motion toward the tail. The implemented gait uses $\Delta\phi=\pi/3$, a maximum tail angle of $0.55$ rad, and a speed-dependent frequency of $1.2$-$2.4$ Hz, following the traveling-wave abstraction widely used in [bio-inspired robotic-fish research](https://doi.org/10.3390/jmse10060773).
+![Robot in Gazebo](assets/swishy.png)
 
-**Robotic and simulation implementation.** A custom ROS 2 gait controller converts Nav2 velocity commands into bounded, rate-limited joint trajectories at 50 Hz and rotates body-frame speed into the world frame using $[\dot{x},\dot{y},\dot{\psi}]^T=[v\cos\psi,v\sin\psi,\omega]^T$. The joint wave is executed through `ros2_control` and a forward position controller, while Gazebo Harmonic provides articulated rigid-body dynamics, contact, buoyancy, odometry, and simulated LiDAR, IMU, camera, and NavSat sensing. The current platform deliberately separates visible gait generation from planar propulsion: translation is applied through constrained planar joints rather than being derived from CFD-resolved tail thrust. This controlled abstraction makes gait-navigation experiments stable and repeatable while leaving a clear research path toward hydrodynamic force models, fluid-structure interaction, and physical validation.
+**Biological inspiration and motion model.** Swishy is a research-oriented simulation platform for studying how body-caudal-fin (BCF) swimming principles can be coupled with autonomous robotic navigation. Fish generate propulsive and steering motions by passing a w
 
-**Autonomy and research applications.** A 360-degree LiDAR feeds SLAM Toolbox, where scan matching and loop closure estimate a 5 cm-resolution occupancy map through pose-graph optimization, conceptually $\mathbf{x}^{*}=\arg\min_{\mathbf{x}}\sum_k\lVert\mathbf{r}_k(\mathbf{x})\rVert_{\Omega_k}^{2}$. Nav2 then combines NavFn global planning, DWB local trajectory control, layered obstacle/inflation costmaps, and collision monitoring with custom figure-eight, patrol, exploration, dance, and interactive mission modes. This integrated testbed supports research into bio-inspired autonomy, gait-command coupling, confined-space navigation, and sensor-driven behavior, with prospective applications in low-disturbance aquatic monitoring, infrastructure inspection, habitat observation, education, and the development of animal-inspired robots for environments where conventional propellers may be intrusive or difficult to maneuver.
+ave of lateral curvature from the body toward the caudal fin.
+
+![Robot in Gazebo](assets/fish_anatomy.png)
+
+ Swishy approximates this behavior across three articulated joints as
+
+$q_i(t)=b_i\kappa(t)+a_iA(s)\sin(\phi(t)-i\Delta\phi)$, with $\dot{\phi}=2\pi f(s)$. 
+
+Here, $A(s)$ and $f(s)$ increase with commanded activity, $\kappa$ introduces a turning bias, and the posteriorly increasing coefficients $a_i$ produce larger motion toward the tail. The implemented gait uses $\Delta\phi=\pi/3$, a maximum tail angle of $0.55$ rad, and a speed-dependent frequency of $1.2$-$2.4$ Hz, following the traveling-wave abstraction widely used in [bio-inspired robotic-fish research](https://doi.org/10.3390/jmse10060773).
+
+**Robotic and simulation implementation.** A custom ROS 2 gait controller converts Nav2 velocity commands into bounded, rate-limited joint trajectories at 50 Hz and rotates body-frame speed into the world frame using:
+
+ $[\dot{x},\dot{y},\dot{\psi}]^T=[v\cos\psi,v\sin\psi,\omega]^T$
+
+The joint wave is executed through `ros2_control` and a forward position controller, while Gazebo Harmonic provides articulated rigid-body dynamics, contact, buoyancy, odometry, and simulated LiDAR, IMU, camera, and NavSat sensing. The current platform deliberately separates visible gait generation from planar propulsion: translation is applied through constrained planar joints rather than being derived from CFD-resolved tail thrust. This controlled abstraction makes gait-navigation experiments stable and repeatable while leaving a clear research path toward hydrodynamic force models, fluid-structure interaction, and physical validation.
+
+**Autonomy and research applications.** A 360-degree LiDAR feeds SLAM Toolbox, where scan matching and loop closure estimate a 5 cm-resolution occupancy map through pose-graph optimization, conceptually:
+
+ $\mathbf{x}^{*}=\arg\min_{\mathbf{x}}\sum_k\lVert\mathbf{r}_k(\mathbf{x})\rVert_{\Omega_k}^{2}$. 
+
+Nav2 then combines NavFn global planning, DWB local trajectory control, layered obstacle/inflation costmaps, and collision monitoring with custom figure-eight, patrol, exploration, dance, and interactive mission modes. 
+
+**Research & Applications.** This implementation project supports research into bio-inspired autonomy, gait-command coupling, confined-space navigation, and sensor-driven behavior, with prospective applications in low-disturbance aquatic monitoring, infrastructure inspection, habitat observation, education, and the development of animal-inspired robots for environments where conventional propellers may be intrusive or difficult to maneuver.
 
 ## Overview
 
@@ -97,6 +119,7 @@ precedence without changing those installations.
 ### Running
 
 **0. First time running full flow:**
+
 ```bash
 # Terminal 1
 source /opt/ros/jazzy/setup.bash
@@ -162,27 +185,33 @@ node. The current color detector draws camera bounding boxes but does not yet
 estimate an object's pose in the map frame.
 
 **1. Spawn Robot in Gazebo:**
+
 ```bash
 ros2 launch fishy_fish_navigation spawn_robot.launch.py
 ```
 
 **2. Start Mapping (Optional):**
+
 ```bash
 ros2 launch fishy_fish_navigation mapping.launch.py
 ```
 
 **3. Start Navigation with slam:**
+
 ```bash
 ros2 launch fishy_fish_navigation navigation_with_slam.launch.py
 ```
 
 **4. Control navigation using teleop:**
+
 ```bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
 ### Running after Modifications
+
 After making changes to the source code like `.urdf` or `.launch.py` files, rebuild the workspace:
+
 ```bash
 colcon build --packages-select fishy_fish_navigation --symlink-install
 source install/setup.bash
@@ -195,7 +224,7 @@ For detailed documentation, see [src/README.md](src/README.md).
 
 ### Robot Spawned in Gazebo
 
-![Robot in Gazebo](assets/spawn_robot_gazeebo.png)
+![Robot in Gazebo](assets/acquarium.png)
 
 The fish robot model spawned in the Gazebo simulation environment with all sensors active (LiDAR, IMU, Camera).
 
@@ -220,6 +249,7 @@ Autonomous navigation in action. Nav2 plans paths to goals while avoiding obstac
 ## Documentation
 
 For comprehensive documentation including:
+
 - Detailed node descriptions
 - Launch file explanations
 - Configuration guides
@@ -228,13 +258,37 @@ For comprehensive documentation including:
 
 Please refer to [src/README.md](src/README.md).
 
+## Relevant Files:
+
+- `src/fishy_fish_navigation/src/publisher.py`: gait equations, tail-joint wave, steering, speed scaling, and planar kinematics.
+- `src/fishy_fish_navigation/urdf/mogi_bot.urdf`: body geometry, articulated links, joints, inertial properties, and limits.
+- `src/fishy_fish_navigation/urdf/mogi_bot.gazebo`: planar-motion constraints, Gazebo controllers, odometry, and sensors.
+- `src/fishy_fish_navigation/config/fish_control.yaml`: 50 Hz `ros2_control` joint-position controller configuration.
+
+## Additional Repositories
+
+1. [github.com/osrf/vrx/tree/jazzy](https://github.com/osrf/vrx/tree/jazzy)
+
+ 2. [ioes-lab.github.io/POSIM](https://ioes-lab.github.io/POSIM/)
+
+3. [github.com/AlePuglisi/MBARI-vehicles-sim-ros2](https://github.com/AlePuglisi/MBARI-vehicles-sim-ros2)
+
+4. [roscon.ros.org/2018/presentations/ROSCon2018_uuvsimulator.pdf](https://roscon.ros.org/2018/presentations/ROSCon2018_uuvsimulator.pdf)
+
+5. [www.mdpi.com/2077-1312/10/6/773](https://www.mdpi.com/2077-1312/10/6/773) 
+
+6. [github.com/clydemcqueen/orca4](https://github.com/clydemcqueen/orca4)
+
 ## Packages
 
 ### `fishy_fish_navigation`
+
 Main navigation package containing launch files, configurations, robot models, and core nodes.
 
 ### `fishy_fish_navigation_py`
+
 Python utility package providing command-line tools for:
+
 - Map loading
 - Initial pose setting
 - Waypoint navigation
@@ -246,9 +300,9 @@ Apache License 2.0
 ## Acknowledgments
 
 Built with:
+
 - ROS2 Jazzy
 - Gazebo Harmonic
 - SLAM Toolbox
 - Nav2 Navigation Stack
 - Robot Localization
-
