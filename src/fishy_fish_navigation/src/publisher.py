@@ -25,6 +25,8 @@ class FishGaitController(Node):
         self.declare_parameter('max_steering_bias', 0.28)
         self.declare_parameter('min_frequency', 1.2)
         self.declare_parameter('max_frequency', 2.4)
+        self.declare_parameter('min_tail_fraction', 0.6)
+        self.declare_parameter('max_joint_speed', 10.0)
         self.declare_parameter('command_timeout', 0.5)
 
         self.max_linear_speed = self.get_parameter('max_linear_speed').value
@@ -33,6 +35,8 @@ class FishGaitController(Node):
         self.max_steering_bias = self.get_parameter('max_steering_bias').value
         self.min_frequency = self.get_parameter('min_frequency').value
         self.max_frequency = self.get_parameter('max_frequency').value
+        self.min_tail_fraction = self.get_parameter('min_tail_fraction').value
+        self.max_joint_speed = self.get_parameter('max_joint_speed').value
         self.command_timeout = self.get_parameter('command_timeout').value
 
         self.linear_command = 0.0
@@ -130,7 +134,15 @@ class FishGaitController(Node):
             2.0 * math.pi,
         )
 
-        amplitude = self.max_tail_angle * self.activity
+        # Like a real fish, the tail keeps a near-constant swing while it swims
+        # and beats faster to go faster: even slow swimming gets at least
+        # min_tail_fraction of the full swing. The swing fades in over the
+        # first 15% of activity so it still settles to rest when stopped.
+        swimming = min(1.0, self.activity / 0.15)
+        amplitude = self.max_tail_angle * swimming * (
+            self.min_tail_fraction
+            + (1.0 - self.min_tail_fraction) * self.activity
+        )
         steering = self.max_steering_bias * angular
         phase_lag = math.pi / 3.0
         targets = [
@@ -139,7 +151,7 @@ class FishGaitController(Node):
             steering + amplitude * math.sin(self.phase - 2.0 * phase_lag),
         ]
 
-        max_position_step = 3.5 * dt
+        max_position_step = self.max_joint_speed * dt
         self.positions = [
             clamp(
                 current + clamp(
