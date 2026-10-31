@@ -128,6 +128,9 @@
           <mean>0.0</mean>
           <stddev>0.007</stddev>
         </noise>
+        <!-- all bits except 0x4 (hides the aquarium water), so the
+             color detector's thresholds stay valid -->
+        <visibility_mask>1073741819</visibility_mask>
         <optical_frame_id>camera_link_optical</optical_frame_id>
         <camera_info_topic>camera/camera_info</camera_info_topic>
       </camera>
@@ -220,6 +223,10 @@
             <mean>0.0</mean>
             <stddev>0.01</stddev>
         </noise>
+        <!-- all bits except 0x4 (aquarium water) and 0x8 (soft decor - kelp,
+             grass, shells, lily pads, backdrop), so neither shows up in /scan
+             or the SLAM map. Hard decor keeps the default flags and is mapped. -->
+        <visibility_mask>1073741811</visibility_mask>
       </lidar>
       <always_on>1</always_on>
       <visualize>false</visualize>

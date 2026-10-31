@@ -64,6 +64,9 @@ swishy/
 - **Localization**: Accurate pose estimation using pre-built maps
 - **Autonomous Navigation**: Nav2-based path planning and execution
 - **Gazebo Simulation**: Full physics simulation with sensors (LiDAR, IMU, Camera)
+- **Aquarium Water**: GPU-shaded rippling surface, underwater fog, caustics, light
+  shafts and rising bubbles, all visual-only and hidden from the LiDAR and camera
+  (see below)
 - **Modular Design**: Separate packages for core functionality and utilities
 
 ## Quick Start
@@ -246,6 +249,76 @@ Robot localizing itself in a pre-built map. The pose estimate is shown with unce
 
 Autonomous navigation in action. Nav2 plans paths to goals while avoiding obstacles, using both global and local costmaps for safe navigation.
 
+### Aquarium Water
+
+The tank is filled with visual-only water from `models/aquarium_water/`:
+
+- **Rippling surface**: three gentle Gerstner waves (wavelengths 1.5 / 0.9 / 0.55 m)
+  drawn on the GPU. A flipped copy (`surface_underside`) shows the surface from
+  below. Tune `amplitude`, `omega` and `alpha` (opacity) in `model.sdf`.
+- **Underwater fog**: Gazebo's renderer has no fog, so 40 nested shells are
+  re-centred on the camera by a vertex shader. An object `d` metres away is
+  tinted by `1 - exp(-density * d)`; only drawn while the camera is under water.
+- **Caustics**: an animated web of refracted light on the sand, drawn on a copy
+  of the sand quad lifted 4 mm.
+- **Light shafts**: soft, swaying strips from the surface to the sand (underwater only).
+- **Bubbles**: three columns of bubbles animated entirely in a vertex shader.
+- **Water volume**: a transparent tinted box from the surface (z = 1.6 m) to the sand.
+- **Sensor-safe**: every water visual has `visibility_flags` 4. The robot's camera
+  uses `visibility_mask` 1073741819 (all bits except 0x4) and the `gpu_lidar`
+  1073741811 (also without 0x8, the soft decor below); 0x2 would make the water
+  catch clicks in the Gazebo GUI.
+  `/scan`, the SLAM map and the color detector don't see the water, so Nav2 and
+  SLAM behave exactly as before. There are no collisions, so physics is unchanged.
+
+The shader visuals use `swishy::WaterShaderParam` from the `swishy_water` package:
+gz-sim's `ShaderParam` with depth writes switched off. The stock system leaves
+depth writes on, so each transparent effect would hide everything behind it.
+Sourcing the workspace puts the plugin on `GZ_SIM_SYSTEM_PLUGIN_PATH`.
+
+Regenerate the meshes after changing the tank size with
+`python3 scripts/make_water_grid.py [out.obj] [size_x] [size_y] [cells_per_m]` (surface) and
+`python3 scripts/make_aquarium_effects.py` (fog shells, light shafts, bubbles, caustics).
+
+### Aquarium Decor
+
+![Aquarium from above](assets/decor_top.png)
+
+![Aquarium, angled view](assets/decor_side.png)
+
+![Aquarium under water](assets/decor_underwater.png)
+
+The tank is aquascaped with local models in `src/fishy_fish_navigation/models/`:
+
+- **Kelp** along the back and side glass (Fuel kelp, swaying in a vertex shader;
+  each plant gets its own phase from its position, so they never move in sync).
+- **Focal point**: a tall cactus with a pebble at (−0.30, 0.60).
+- **Corners**: cacti, rocks and a mossy driftwood log.
+- **Carpet**: grass and fern patches, shells and a starfish near the front glass,
+  lily pads on the surface and a painted blue backdrop on the back glass.
+- **Lighting**: sun and a spot light over the focal point cast shadows; the second
+  spot over the kelp does not (three shadow casters made the simulation stall on
+  integrated graphics).
+
+Sensors and navigation:
+
+- **Soft decor** (kelp, grass, shells, starfish, lily pads, backdrop) has no
+  collision and `visibility_flags` 8, so the LiDAR never sees it and Swishy can
+  brush through the kelp. The camera still sees it.
+- **Hard decor** (cacti, rocks, driftwood) keeps the default flags and simple
+  cylinder/box collisions, so it is mapped. Everything at scan height is listed in
+  `obstacle_centers`/`obstacle_radii` in `showcase_profiles.yaml`, and
+  `test_navigation_patterns.py` checks every showcase route against that list.
+- **Colors** stay outside the color detector's HSV ranges: green plants, pink
+  starfish, cream shells, desaturated rocks and driftwood. The camera's only
+  decor match is a few gray-range pixels on the focal pebble at close range.
+- `maps/` was re-mapped with the decor in place.
+
+Change the layout in `scripts/layout_decor.py`, which checks every route and
+patrol leg and rewrites the decor block in `fish_world.sdf`. The shells, starfish
+and backdrop come from `scripts/make_decor_assets.py`; the double-sided kelp
+meshes for the sway shader from `scripts/make_kelp_sway_meshes.py`.
+
 ## Documentation
 
 For comprehensive documentation including:
@@ -312,3 +385,11 @@ Built with:
 - SLAM Toolbox
 - Nav2 Navigation Stack
 - Robot Localization
+- [VRX](https://github.com/osrf/vrx) (Apache 2.0): Gerstner-wave shaders and
+  textures used by the aquarium water, originally from UUV Simulator / Rhys Mainwaring
+- [gz-sim](https://github.com/gazebosim/gz-sim) (Apache 2.0): `ShaderParam` system,
+  adapted as `swishy::WaterShaderParam` in `src/swishy_water`
+- Kelp and Ocean Rock models by Cole Biesemeyer, [Gazebo Fuel](https://fuel.gazebosim.org/1.0/Cole),
+  CC-BY 4.0 (rescaled, textures downscaled to 1024², rock texture desaturated)
+- Nature models (cacti, mossy rock, driftwood, grass, fern, lily pad) by
+  [Quaternius](https://quaternius.com), Ultimate Nature Pack, CC0

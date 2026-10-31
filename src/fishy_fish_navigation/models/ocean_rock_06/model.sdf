@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!-- Ocean Rock 06: 0.14 x 0.12 x 0.07 m (mesh is ~72 m, scale 0.00196).
+     Model origin = base of the rock. Hard decor: default visibility flags, so the
+     LiDAR maps it; simple cylinder collision of radius 0.063 m. -->
+<sdf version="1.8">
+  <model name="ocean_rock_06">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <pose>0 0 0.0272 0 0 0</pose>
+        <geometry><cylinder><radius>0.063</radius><length>0.074</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0.0142 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Rock06.dae</uri>
+            <scale>0.00196 0.00196 0.00196</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.2 0.2 0.2 1</specular>
+          <pbr>
+            <metal>
+              <albedo_map>model://ocean_rock_01/materials/textures/Rock_Albedo.png</albedo_map>
+              <normal_map>model://ocean_rock_01/materials/textures/Rock_Normal.png</normal_map>
+              <roughness>0.9</roughness>
+              <metalness>0</metalness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

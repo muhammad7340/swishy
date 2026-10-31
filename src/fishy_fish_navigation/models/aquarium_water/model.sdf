@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<!--
+  Aquarium water for the Swishy fish tank (visual only).
+
+  Model origin = water surface. In fish_world.sdf it is placed at z = 1.6:
+    sand floor   z ~ 0.82 - 1.03
+    Swishy       z ~ 1.0  - 1.2   (spawned at z = 1.0, lidar at ~1.15)
+    surface      z = 1.6
+    glass rim    z ~ 1.86
+
+  Every visual carries visibility_flags 4 (0x4). The gpu_lidar and the camera
+  in urdf/mogi_bot.gazebo use visibility_mask 1073741819 (0x3FFFFFFB: all bits
+  except 0x4; ogre2 reserves the top two bits), so /scan, the SLAM map and the
+  color detector never see the water. The GUI camera uses the default mask and
+  therefore shows it. Not 0x2: that is GZ_VISIBILITY_SELECTABLE, which would
+  make the water (and its large fog-shell bounds) catch every click and the
+  orbit/zoom pivot in the Gazebo GUI.
+
+  Shader visuals use swishy::WaterShaderParam (package swishy_water): gz-sim's
+  ShaderParam with depth writes off, so the transparent effects blend with each
+  other instead of hiding what lies behind them.
+-->
+<sdf version="1.8">
+  <model name="aquarium_water">
+    <static>true</static>
+
+    <link name="water_link">
+
+      <!-- Step 2: tinted, transparent water volume from the surface down to
+           just below the sand. No <collision>: physics/Nav2 are unaffected. -->
+      <visual name="volume">
+        <!-- top kept 3 cm under the surface, below the wave troughs, so it
+             never z-fights with the surface visuals -->
+        <pose>0 0 -0.39 0 0 0</pose>
+        <geometry>
+          <box><size>3.9 3.8 0.72</size></box>
+        </geometry>
+        <transparency>0.85</transparency>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.1 0.4 0.55 1</ambient>
+          <diffuse>0.1 0.4 0.55 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+          <!-- render the inside faces too, so the tank still looks full of
+               water when the GUI camera dives below the surface -->
+          <double_sided>true</double_sided>
+        </material>
+        <visibility_flags>4</visibility_flags>
+      </visual>
+
+      <!-- Step 3: moving Gerstner-wave surface, drawn on the GPU. Shaders are
+           adapted from VRX; see materials/programs/ for license headers. -->
+      <visual name="surface">
+        <geometry>
+          <mesh><uri>meshes/water_grid.obj</uri></mesh>
+        </geometry>
+        <cast_shadows>false</cast_shadows>
+        <visibility_flags>4</visibility_flags>
+        <plugin filename="swishy-water-shader-system"
+                name="swishy::WaterShaderParam">
+          <depth_write>false</depth_write>
+          <shader language="glsl">
+            <vertex>materials/programs/GerstnerWaves_vs_330.glsl</vertex>
+            <fragment>materials/programs/GerstnerWaves_fs_330.glsl</fragment>
+          </shader>
+
+          <!-- filled in by Ogre itself: no <value> -->
+          <param><shader>vertex</shader><name>worldviewproj_matrix</name></param>
+          <param><shader>vertex</shader><name>camera_position_object_space</name></param>
+          <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
+
+          <!-- 3 gentle aquarium ripples, wavelengths 1.5 / 0.9 / 0.55 m.
+               omega is slowed for a calm tank; deep-water dispersion would
+               give ~6.4 / 8.3 / 10.6 rad/s for livelier water. -->
+          <param><shader>vertex</shader><name>Nwaves</name><type>int</type><value>3</value></param>
+          <param><shader>vertex</shader><name>amplitude</name><type>float_array</type><value>0.012 0.007 0.004</value></param>
+          <param><shader>vertex</shader><name>wavenumber</name><type>float_array</type><value>4.19 6.98 11.42</value></param>
+          <param><shader>vertex</shader><name>omega</name><type>float_array</type><value>1.6 2.1 2.7</value></param>
+          <param><shader>vertex</shader><name>steepness</name><type>float_array</type><value>0.4 0.4 0.4</value></param>
+          <param><shader>vertex</shader><name>dir0</name><type>float_array</type><value>1.0 0.0</value></param>
+          <param><shader>vertex</shader><name>dir1</name><type>float_array</type><value>0.71 0.71</value></param>
+          <param><shader>vertex</shader><name>dir2</name><type>float_array</type><value>0.29 -0.96</value></param>
+          <param><shader>vertex</shader><name>tau</name><type>float</type><value>2.0</value></param>
+          <param><shader>vertex</shader><name>rescale</name><type>float</type><value>0.5</value></param>
+          <param><shader>vertex</shader><name>bumpScale</name><type>float_array</type><value>5 5</value></param>
+          <param><shader>vertex</shader><name>bumpSpeed</name><type>float_array</type><value>0.04 0.02</value></param>
+
+          <param><shader>fragment</shader><name>shallowColor</name><type>float_array</type><value>0.05 0.45 0.55 1</value></param>
+          <param><shader>fragment</shader><name>deepColor</name><type>float_array</type><value>0.0 0.2 0.35 1</value></param>
+          <param><shader>fragment</shader><name>fresnelPower</name><type>float</type><value>5.0</value></param>
+          <param><shader>fragment</shader><name>hdrMultiplier</name><type>float</type><value>0.4</value></param>
+          <param><shader>fragment</shader><name>alpha</name><type>float</type><value>0.4</value></param>
+          <param><shader>fragment</shader><name>bumpMap</name><type>texture</type><value>materials/textures/wave_normals.dds</value></param>
+          <param>
+            <shader>fragment</shader><name>cubeMap</name><type>texture_cube</type>
+            <value>materials/textures/skybox_lowres.dds</value>
+            <arg>1</arg>
+          </param>
+        </plugin>
+      </visual>
+
+      <!-- Underside of the surface. The grid is one-sided (faces up), so from
+           below the visual above is culled. This copy is rolled 180 deg so its
+           front face points down into the water; the shader then shades it
+           as seen from "above" in its own frame. Darker colors, more opaque. -->
+      <visual name="surface_underside">
+        <pose>0 0 -0.002 3.14159 0 0</pose>
+        <geometry>
+          <mesh><uri>meshes/water_grid.obj</uri></mesh>
+        </geometry>
+        <cast_shadows>false</cast_shadows>
+        <visibility_flags>4</visibility_flags>
+        <plugin filename="swishy-water-shader-system"
+                name="swishy::WaterShaderParam">
+          <depth_write>false</depth_write>
+          <shader language="glsl">
+            <vertex>materials/programs/GerstnerWaves_vs_330.glsl</vertex>
+            <fragment>materials/programs/GerstnerWaves_fs_330.glsl</fragment>
+          </shader>
+
+          <!-- filled in by Ogre itself: no <value> -->
+          <param><shader>vertex</shader><name>worldviewproj_matrix</name></param>
+          <param><shader>vertex</shader><name>camera_position_object_space</name></param>
+          <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
+
+          <!-- 3 gentle aquarium ripples, wavelengths 1.5 / 0.9 / 0.55 m.
+               omega is slowed for a calm tank; deep-water dispersion would
+               give ~6.4 / 8.3 / 10.6 rad/s for livelier water. -->
+          <param><shader>vertex</shader><name>Nwaves</name><type>int</type><value>3</value></param>
+          <param><shader>vertex</shader><name>amplitude</name><type>float_array</type><value>0.012 0.007 0.004</value></param>
+          <param><shader>vertex</shader><name>wavenumber</name><type>float_array</type><value>4.19 6.98 11.42</value></param>
+          <param><shader>vertex</shader><name>omega</name><type>float_array</type><value>1.6 2.1 2.7</value></param>
+          <param><shader>vertex</shader><name>steepness</name><type>float_array</type><value>0.4 0.4 0.4</value></param>
+          <param><shader>vertex</shader><name>dir0</name><type>float_array</type><value>1.0 0.0</value></param>
+          <param><shader>vertex</shader><name>dir1</name><type>float_array</type><value>0.71 0.71</value></param>
+          <param><shader>vertex</shader><name>dir2</name><type>float_array</type><value>0.29 -0.96</value></param>
+          <param><shader>vertex</shader><name>tau</name><type>float</type><value>2.0</value></param>
+          <param><shader>vertex</shader><name>rescale</name><type>float</type><value>0.5</value></param>
+          <param><shader>vertex</shader><name>bumpScale</name><type>float_array</type><value>5 5</value></param>
+          <param><shader>vertex</shader><name>bumpSpeed</name><type>float_array</type><value>0.04 0.02</value></param>
+
+          <param><shader>fragment</shader><name>shallowColor</name><type>float_array</type><value>0.15 0.55 0.65 1</value></param>
+          <param><shader>fragment</shader><name>deepColor</name><type>float_array</type><value>0.05 0.3 0.45 1</value></param>
+          <param><shader>fragment</shader><name>fresnelPower</name><type>float</type><value>5.0</value></param>
+          <!-- 0: no sky reflection from below; the skybox horizon otherwise
+               shows as a sharp arc on the underside -->
+          <param><shader>fragment</shader><name>hdrMultiplier</name><type>float</type><value>0.0</value></param>
+          <param><shader>fragment</shader><name>alpha</name><type>float</type><value>0.55</value></param>
+          <param><shader>fragment</shader><name>bumpMap</name><type>texture</type><value>materials/textures/wave_normals.dds</value></param>
+          <param>
+            <shader>fragment</shader><name>cubeMap</name><type>texture_cube</type>
+            <value>materials/textures/skybox_lowres.dds</value>
+            <arg>1</arg>
+          </param>
+        </plugin>
+      </visual>
+
+      <!-- Caustics: animated web of refracted sunlight on the sand. Drawn on
+           a copy of the sand quad lifted 4 mm (the sand in models/model.dae
+           is one flat, slightly tilted quad), so only the sand is lit;
+           objects on it occlude it normally. -->
+      <visual name="sand_caustics">
+        <geometry>
+          <mesh><uri>meshes/sand_caustics.obj</uri></mesh>
+        </geometry>
+        <cast_shadows>false</cast_shadows>
+        <visibility_flags>4</visibility_flags>
+        <plugin filename="swishy-water-shader-system"
+                name="swishy::WaterShaderParam">
+          <depth_write>false</depth_write>
+          <shader language="glsl">
+            <vertex>materials/programs/SandCaustics_vs_330.glsl</vertex>
+            <fragment>materials/programs/SandCaustics_fs_330.glsl</fragment>
+          </shader>
+          <param><shader>vertex</shader><name>worldviewproj_matrix</name></param>
+          <param><shader>fragment</shader><name>t</name><value>TIME</value></param>
+          <param><shader>fragment</shader><name>lightColor</name><type>float_array</type><value>0.85 0.97 1.0 1</value></param>
+          <param><shader>fragment</shader><name>strength</name><type>float</type><value>0.45</value></param>
+          <param><shader>fragment</shader><name>scale</name><type>float</type><value>5.5</value></param>
+          <param><shader>fragment</shader><name>speed</name><type>float</type><value>0.6</value></param>
+          <param><shader>fragment</shader><name>width</name><type>float</type><value>0.22</value></param>
+        </plugin>
+      </visual>
+
+      <!-- Underwater fog. The renderer has no fog, so nested inward-facing
+           shells (scripts/make_aquarium_effects.py) are re-centred on the
+           camera by the vertex shader; an object d metres away is tinted by
+           1 - exp(-density * d). Only drawn while the camera is under water.
+           Raise density for murkier water. -->
+      <visual name="fog">
+        <geometry>
+          <mesh><uri>meshes/fog_shells.obj</uri></mesh>
+        </geometry>
+        <cast_shadows>false</cast_shadows>
+        <visibility_flags>4</visibility_flags>
+        <plugin filename="swishy-water-shader-system"
+                name="swishy::WaterShaderParam">
+          <depth_write>false</depth_write>
+          <shader language="glsl">
+            <vertex>materials/programs/UnderwaterFog_vs_330.glsl</vertex>
+            <fragment>materials/programs/UnderwaterFog_fs_330.glsl</fragment>
+          </shader>
+          <param><shader>vertex</shader><name>worldviewproj_matrix</name></param>
+          <param><shader>vertex</shader><name>camera_position_object_space</name></param>
+          <param><shader>fragment</shader><name>fogColor</name><type>float_array</type><value>0.1 0.38 0.45 1</value></param>
+          <param><shader>fragment</shader><name>density</name><type>float</type><value>0.3</value></param>
+          <param><shader>fragment</shader><name>spacing</name><type>float</type><value>0.1</value></param>
+          <param><shader>fragment</shader><name>halfSize</name><type>float_array</type><value>1.95 1.9</value></param>
+          <param><shader>fragment</shader><name>waterZ</name><type>float</type><value>0.0</value></param>
+        </plugin>
+      </visual>
+
+      <!-- Light shafts from the surface to the sand, swaying and flickering
+           slowly. Only drawn while the camera is under water. -->
+      <visual name="god_rays">
+        <geometry>
+          <mesh><uri>meshes/god_rays.obj</uri></mesh>
+        </geometry>
+        <cast_shadows>false</cast_shadows>
+        <visibility_flags>4</visibility_flags>
+        <plugin filename="swishy-water-shader-system"
+                name="swishy::WaterShaderParam">
+          <depth_write>false</depth_write>
+          <shader language="glsl">
+            <vertex>materials/programs/GodRays_vs_330.glsl</vertex>
+            <fragment>materials/programs/GodRays_fs_330.glsl</fragment>
+          </shader>
+          <param><shader>vertex</shader><name>worldviewproj_matrix</name></param>
+          <param><shader>vertex</shader><name>camera_position_object_space</name></param>
+          <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
+          <param><shader>fragment</shader><name>t</name><value>TIME</value></param>
+          <param><shader>fragment</shader><name>rayColor</name><type>float_array</type><value>0.8 0.96 1.0 1</value></param>
+          <param><shader>fragment</shader><name>intensity</name><type>float</type><value>0.22</value></param>
+          <param><shader>fragment</shader><name>waterZ</name><type>float</type><value>0.0</value></param>
+        </plugin>
+      </visual>
+
+      <!-- Rising air bubbles in three columns, animated entirely in the
+           vertex shader. Unlike particle emitters, a visual can carry
+           visibility_flags, so the robot camera and lidar never see them. -->
+      <visual name="bubbles">
+        <geometry>
+          <mesh><uri>meshes/bubbles.obj</uri></mesh>
+        </geometry>
+        <cast_shadows>false</cast_shadows>
+        <visibility_flags>4</visibility_flags>
+        <plugin filename="swishy-water-shader-system"
+                name="swishy::WaterShaderParam">
+          <depth_write>false</depth_write>
+          <shader language="glsl">
+            <vertex>materials/programs/Bubbles_vs_330.glsl</vertex>
+            <fragment>materials/programs/Bubbles_fs_330.glsl</fragment>
+          </shader>
+          <param><shader>vertex</shader><name>worldviewproj_matrix</name></param>
+          <param><shader>vertex</shader><name>camera_position_object_space</name></param>
+          <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
+          <param><shader>vertex</shader><name>radius</name><type>float</type><value>0.02</value></param>
+          <param><shader>vertex</shader><name>height</name><type>float</type><value>0.66</value></param>
+          <param><shader>vertex</shader><name>speed</name><type>float</type><value>0.18</value></param>
+        </plugin>
+      </visual>
+    </link>
+
+  </model>
+</sdf>
