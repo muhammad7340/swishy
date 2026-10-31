@@ -94,12 +94,14 @@ def generate_launch_description():
         package="ros_gz_image",
         executable="image_bridge",
         arguments=[
-            "/camera/image",
+            "/left_eye/image",
+            "/right_eye/image",
         ],
         output="screen",
         parameters=[
             {'use_sim_time': LaunchConfiguration('use_sim_time'),
-             'camera.image.compressed.jpeg_quality': 75},
+             'left_eye.image.compressed.jpeg_quality': 75,
+             'right_eye.image.compressed.jpeg_quality': 75},
         ],
     )
 

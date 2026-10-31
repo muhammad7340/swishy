@@ -28,8 +28,14 @@
   gz_type_name: "gz.msgs.Double"
   direction: "ROS_TO_GZ"
 
-- ros_topic_name: "camera/camera_info"
-  gz_topic_name: "camera/camera_info"
+- ros_topic_name: "left_eye/camera_info"
+  gz_topic_name: "left_eye/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: "GZ_TO_ROS"
+
+- ros_topic_name: "right_eye/camera_info"
+  gz_topic_name: "right_eye/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "gz.msgs.CameraInfo"
   direction: "GZ_TO_ROS"
