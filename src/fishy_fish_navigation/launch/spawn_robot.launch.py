@@ -191,6 +191,10 @@ def generate_launch_description():
                     "joint_state_broadcaster",
                     "--controller-manager-timeout", "30",
                     "--switch-timeout", "20",
+                    # loading takes >10 s (the default) under a busy CPU; the
+                    # spawner then retried, found it "already loaded" and gave
+                    # up, leaving the controller unconfigured
+                    "--service-call-timeout", "60",
                 ],
                 parameters=[{'use_sim_time': True}],
                 output="screen"
@@ -209,6 +213,10 @@ def generate_launch_description():
                     "fish_joint_controller",
                     "--controller-manager-timeout", "30",
                     "--switch-timeout", "20",
+                    # loading takes >10 s (the default) under a busy CPU; the
+                    # spawner then retried, found it "already loaded" and gave
+                    # up, leaving the controller unconfigured
+                    "--service-call-timeout", "60",
                 ],
                 parameters=[{'use_sim_time': True}],
                 output="screen"
