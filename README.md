@@ -214,6 +214,18 @@ ros2 launch fishy_fish_navigation navigation_with_slam.launch.py
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
+### Viewing the Eye Cameras
+
+With the sim running, open one window per eye; both update live as Swishy moves (5 Hz):
+
+```bash
+ros2 run rqt_image_view rqt_image_view /left_eye/image
+ros2 run rqt_image_view rqt_image_view /right_eye/image
+```
+
+In RViz, tick the Camera display (left eye), or add a second Camera display with topic
+`/right_eye/image/compressed`.
+
 ### Running after Modifications
 
 After making changes to the source code like `.urdf` or `.launch.py` files, rebuild the workspace:
