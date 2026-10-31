@@ -39,7 +39,7 @@ This package provides a complete navigation solution for a fish robot, featuring
           ▼                 ▼                 ▼
     ┌─────────────────────────────────────────────────────┐
     │            ROS-Gazebo Bridge (gz_bridge)            │
-    │  Topics: /camera/image, /scan, /imu, /odom, /cmd_vel│
+    │  Topics: /*_eye/image, /scan, /imu, /odom, /cmd_vel │
     └─────────────────────────────────────────────────────┘
           │                │                   │
           ▼                ▼                   ▼
@@ -205,15 +205,15 @@ This package provides a complete navigation solution for a fish robot, featuring
   - `/imu` (IMU): Inertial measurements
   - `/odom` (Odometry): Wheel odometry
   - `/cmd_vel` (Twist): Velocity commands
-  - `/camera/image` (Image): Camera feed
+  - `/left_eye/camera_info`, `/right_eye/camera_info` (CameraInfo): eye camera calibration
   - `/clock` (Clock): Simulation time
 - **Configuration**: `config/gz_bridge.yaml`
 
 #### 4. `gz_image_bridge` (ros_gz_image)
 
-- **Purpose**: Bridges camera images from Gazebo to ROS2
-- **Input**: `/camera/image` (Gazebo)
-- **Output**: `/camera/image` (ROS2, compressed)
+- **Purpose**: Bridges the two eye-camera images from Gazebo to ROS2
+- **Input**: `/left_eye/image`, `/right_eye/image` (Gazebo)
+- **Output**: `/left_eye/image`, `/right_eye/image` (ROS2, plus `/compressed`)
 
 #### 5. Static Transform Publishers
 
@@ -246,7 +246,7 @@ This package provides a complete navigation solution for a fish robot, featuring
 #### 7. `object_detection_node.py` (optional)
 
 - **Purpose**: Detects colored objects in camera feed
-- **Input**: `/camera/image` (Image)
+- **Input**: `/left_eye/image` (Image)
 - **Output**: Visual display (OpenCV window)
 - **Features**:
   - HSV color-based detection

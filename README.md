@@ -63,9 +63,12 @@ swishy/
 - **SLAM Mapping**: Real-time map building with loop closure
 - **Localization**: Accurate pose estimation using pre-built maps
 - **Autonomous Navigation**: Nav2-based path planning and execution
-- **Gazebo Simulation**: Full physics simulation with sensors (LiDAR, IMU, Camera)
+- **Gazebo Simulation**: Full physics simulation with sensors (LiDAR, IMU, two eye cameras)
+- **Fish Eyes**: an invisible camera in each eye looks out its own side, 40° forward
+  of sideways, like a real fish (`/left_eye/image`, `/right_eye/image`; the color
+  detector uses the left eye)
 - **Aquarium Water**: GPU-shaded rippling surface, underwater fog, caustics, light
-  shafts and rising bubbles, all visual-only and hidden from the LiDAR and camera
+  shafts and rising bubbles, all visual-only and hidden from the LiDAR and cameras
   (see below)
 - **Modular Design**: Separate packages for core functionality and utilities
 
@@ -264,8 +267,8 @@ The tank is filled with visual-only water from `models/aquarium_water/`:
 - **Light shafts**: soft, swaying strips from the surface to the sand (underwater only).
 - **Bubbles**: three columns of bubbles animated entirely in a vertex shader.
 - **Water volume**: a transparent tinted box from the surface (z = 1.6 m) to the sand.
-- **Sensor-safe**: every water visual has `visibility_flags` 4. The robot's camera
-  uses `visibility_mask` 1073741819 (all bits except 0x4) and the `gpu_lidar`
+- **Sensor-safe**: every water visual has `visibility_flags` 4. The robot's eye cameras
+  use `visibility_mask` 1073741819 (all bits except 0x4) and the `gpu_lidar`
   1073741811 (also without 0x8, the soft decor below); 0x2 would make the water
   catch clicks in the Gazebo GUI.
   `/scan`, the SLAM map and the color detector don't see the water, so Nav2 and

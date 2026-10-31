@@ -194,57 +194,42 @@
     <limit lower="-0.8" upper="0.8" effort="20" velocity="50"/>
   </joint>
 
-  <!-- Camera -->
-  <joint type="fixed" name="camera_joint">
-    <origin xyz="-0.01 -0.009 0.10" rpy="0 0 0"/>
-    <child link="camera_link"/>
-    <parent link="body_link"/>
-    <axis xyz="0 1 0" />
-  </joint>
+  <!-- Eye cameras: one invisible camera in the centre of each robotic eye,
+       looking out of its own side like a fish, eye_camera_forward_angle
+       forward of straight sideways. Sides follow REP-103 (+Y is the fish's
+       left): the eye visual named "right_robotic_eye" (body x = eye_right_x)
+       is on the fish's left, so it holds left_eye_camera. Positions come from
+       the eye properties (body frame, rotated +90 deg into base_link). -->
+  <xacro:property name="eye_camera_forward_angle" value="0.698131700798" /> <!-- 40 deg -->
 
-  <link name='camera_link'>
-    <pose>0 0 0 0 0 0</pose>
-    <inertial>
-      <mass value="0.001"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia
-          ixx="1e-6" ixy="0" ixz="0"
-          iyy="1e-6" iyz="0"
-          izz="1e-6"
-      />
-    </inertial>
+  <xacro:macro name="eye_camera" params="side eye_body_x yaw">
+    <joint type="fixed" name="${side}_eye_camera_joint">
+      <origin xyz="${-eye_front_y} ${eye_body_x} ${eye_height_z}" rpy="0 0 ${yaw}"/>
+      <parent link="base_link"/>
+      <child link="${side}_eye_camera_link"/>
+    </joint>
 
-    <collision name='collision'>
-      <origin xyz="0 0 0" rpy="0 0 0"/> 
-      <geometry>
-        <box size=".03 .03 .03"/>
-      </geometry>
-    </collision>
+    <link name="${side}_eye_camera_link">
+      <inertial>
+        <mass value="0.001"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+      </inertial>
+    </link>
 
-    <!-- Camera visual marker hidden; the camera sensor remains active. -->
-    <!--
-    <visual name='camera_link_visual'>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size=".03 .03 .03"/>
-      </geometry>
-    </visual>
-    -->
+    <joint type="fixed" name="${side}_eye_camera_optical_joint">
+      <origin xyz="0 0 0" rpy="-1.5707 0 -1.5707"/>
+      <parent link="${side}_eye_camera_link"/>
+      <child link="${side}_eye_camera_optical"/>
+    </joint>
 
-  </link>
+    <link name="${side}_eye_camera_optical"/>
+  </xacro:macro>
 
-  <gazebo reference="camera_link">
-    <material>Gazebo/Red</material>
-  </gazebo>
-
-  <joint type="fixed" name="camera_optical_joint">
-    <origin xyz="0 0 0" rpy="-1.5707 0 -1.5707"/>
-    <child link="camera_link_optical"/>
-    <parent link="camera_link"/>
-  </joint>
-
-  <link name="camera_link_optical">
-  </link>
+  <xacro:eye_camera side="left" eye_body_x="${eye_right_x}"
+                    yaw="${pi/2 - eye_camera_forward_angle}"/>
+  <xacro:eye_camera side="right" eye_body_x="${eye_left_x}"
+                    yaw="${-pi/2 + eye_camera_forward_angle}"/>
 
   <!-- IMU -->
   <joint name="imu_joint" type="fixed">
