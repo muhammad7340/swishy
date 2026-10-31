@@ -126,7 +126,7 @@
 
          <!-- lighting settings -->
         <light type="directional" name="sun">
-            <cast_shadows>false</cast_shadows>
+            <cast_shadows>true</cast_shadows>
             <pose>0 0 10 0 0 0</pose>
             <diffuse>0.8 0.8 0.8 1</diffuse>
             <specular>0.2 0.2 0.2 1</specular>
@@ -137,6 +137,49 @@
                 <quadratic>0.001</quadratic>
             </attenuation>
             <direction>-0.5 0.1 -0.9</direction>
+        </light>
+
+        <!-- Aquarium spot lights, 0.8 m above the water (z = 2.4). If the
+             real-time factor drops below 0.95, turn off shadows on
+             kelp_spot first. -->
+        <light type="spot" name="focal_spot">
+            <visualize>false</visualize>
+            <pose>-0.55 0.65 2.4 0 0 0</pose>
+            <cast_shadows>true</cast_shadows>
+            <diffuse>0.85 0.95 1.0 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+            <direction>0 0 -1</direction>
+            <attenuation>
+                <range>4</range>
+                <constant>0.6</constant>
+                <linear>0.1</linear>
+                <quadratic>0.02</quadratic>
+            </attenuation>
+            <spot>
+                <inner_angle>0.35</inner_angle>
+                <outer_angle>0.7</outer_angle>
+                <falloff>1.0</falloff>
+            </spot>
+        </light>
+
+        <light type="spot" name="kelp_spot">
+            <visualize>false</visualize>
+            <pose>0 1.2 2.4 0 0 0</pose>
+            <cast_shadows>true</cast_shadows>
+            <diffuse>0.7 0.85 1.0 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <direction>0 0.35 -1</direction>
+            <attenuation>
+                <range>4</range>
+                <constant>0.6</constant>
+                <linear>0.1</linear>
+                <quadratic>0.02</quadratic>
+            </attenuation>
+            <spot>
+                <inner_angle>0.6</inner_angle>
+                <outer_angle>1.1</outer_angle>
+                <falloff>1.0</falloff>
+            </spot>
         </light>
 
         <!-- ground plane model -->
