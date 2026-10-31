@@ -349,8 +349,8 @@ Please refer to [src/README.md](src/README.md).
 ## Relevant Files:
 
 - `src/fishy_fish_navigation/src/publisher.py`: gait equations, tail-joint wave, steering, speed scaling, and planar kinematics.
-- `src/fishy_fish_navigation/urdf/mogi_bot.urdf`: body geometry, articulated links, joints, inertial properties, and limits.
-- `src/fishy_fish_navigation/urdf/mogi_bot.gazebo`: planar-motion constraints, Gazebo controllers, odometry, and sensors.
+- `src/fishy_fish_navigation/urdf/swishy.urdf`: body geometry, articulated links, joints, inertial properties, and limits.
+- `src/fishy_fish_navigation/urdf/swishy.gazebo`: planar-motion constraints, Gazebo controllers, odometry, and sensors.
 - `src/fishy_fish_navigation/config/fish_control.yaml`: 50 Hz `ros2_control` joint-position controller configuration.
 
 ## Additional Repositories

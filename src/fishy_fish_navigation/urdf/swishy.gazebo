@@ -111,7 +111,7 @@
     </plugin>
   </gazebo>
 
-  <!-- One camera per eye (links in mogi_bot.urdf). Each publishes
+  <!-- One camera per eye (links in swishy.urdf). Each publishes
        <side>_eye/image and <side>_eye/camera_info. The 0.1 m near clip hides
        the eyeball and head the camera sits inside. 5 Hz each renders as many
        frames as the old single 10 Hz camera: two eyes at 10 Hz stalled the

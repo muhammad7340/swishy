@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 
-<robot name="mogi_bot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="swishy" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
   <!-- Xacro property for fish_control.yaml path (can be overridden) -->
   <xacro:property name="fish_control_yaml" value="$(find fishy_fish_navigation)/config/fish_control.yaml" />
@@ -15,7 +15,7 @@
   <xacro:property name="eye_right_yaw" value="1.57079632679" /> 
 
   <!-- STEP 3 - Gazebo plugin -->
-  <xacro:include filename="$(find fishy_fish_navigation)/urdf/mogi_bot.gazebo" />
+  <xacro:include filename="$(find fishy_fish_navigation)/urdf/swishy.gazebo" />
 
   <!-- STEP 4 - RViz colors -->
   <xacro:include filename="$(find fishy_fish_navigation)/urdf/materials.xacro" />
@@ -77,7 +77,7 @@
   </link>
 
   <!-- =============== ROS 2 Control =============== -->
-  <ros2_control name="mogi_bot" type="system">
+  <ros2_control name="swishy" type="system">
     <hardware>
       <plugin>gz_ros2_control/GazeboSimSystem</plugin>
     </hardware>

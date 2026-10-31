@@ -9,7 +9,7 @@
     glass rim    z ~ 1.86
 
   Every visual carries visibility_flags 4 (0x4). The gpu_lidar and the camera
-  in urdf/mogi_bot.gazebo use visibility_mask 1073741819 (0x3FFFFFFB: all bits
+  in urdf/swishy.gazebo use visibility_mask 1073741819 (0x3FFFFFFB: all bits
   except 0x4; ogre2 reserves the top two bits), so /scan, the SLAM map and the
   color detector never see the water. The GUI camera uses the default mask and
   therefore shows it. Not 0x2: that is GZ_VISIBILITY_SELECTABLE, which would
