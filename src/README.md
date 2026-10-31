@@ -178,7 +178,7 @@ This package provides a complete navigation solution for a fish robot, featuring
 #### 1. `robot_state_publisher`
 
 - **Purpose**: Publishes the robot's kinematic state to TF tree
-- **Input**: URDF description (`mogi_bot.urdf`)
+- **Input**: URDF description (`swishy.urdf`)
 - **Output**: TF transforms for robot links
 - **Key**: Establishes base_link → scan_link, imu_link transforms
 
@@ -219,8 +219,8 @@ This package provides a complete navigation solution for a fish robot, featuring
 
 - **Purpose**: Establishes TF chain for Gazebo sensor frames
 - **Transforms**:
-  - `scan_link → mogi_bot/base_footprint/gpu_lidar`
-  - `imu_link → mogi_bot/base_footprint/imu`
+  - `scan_link → swishy/base_footprint/gpu_lidar`
+  - `imu_link → swishy/base_footprint/imu`
 
 ### Custom Nodes
 
@@ -545,7 +545,7 @@ def define_waypoints(self):
 - **Purpose**: Main robot spawning and sensor setup launch file
 - **Arguments**:
   - `world`: World file (default: `fish_world.sdf`)
-  - `model`: URDF file (default: `mogi_bot.urdf`)
+  - `model`: URDF file (default: `swishy.urdf`)
   - `use_sim_time`: Enable simulation time (default: `True`)
 - **Launches**:
   1. `world.launch.py` (Gazebo)
@@ -807,8 +807,8 @@ src/
 │   │   ├── object_detection_node.py
 │   │   └── publisher.py           # Fish controller
 │   ├── urdf/                      # Robot description
-│   │   ├── mogi_bot.urdf
-│   │   ├── mogi_bot.gazebo
+│   │   ├── swishy.urdf
+│   │   ├── swishy.gazebo
 │   │   └── materials.xacro
 │   └── worlds/                    # Gazebo world files
 │       ├── fish_world.sdf
@@ -871,7 +871,7 @@ The fish robot uses a unique undulating motion pattern:
 - Check `/cmd_vel` and `/fish_joint_controller/commands`
 - Check `/planar_x_velocity`, `/planar_y_velocity`, and
   `/planar_yaw_velocity`
-- Check Gazebo topics under `/model/mogi_bot/joint/planar_*/cmd_vel`
+- Check Gazebo topics under `/model/swishy/joint/planar_*/cmd_vel`
 
 ## License
 
