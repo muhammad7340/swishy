@@ -293,7 +293,7 @@
   </model>
 
 <!-- Aquarium water: visual only (no collision), hidden from lidar/camera
-     via visibility flag 0x2. Model origin is the water surface. -->
+     via visibility flag 0x4. Model origin is the water surface. -->
 <include>
   <uri>model://aquarium_water</uri>
   <pose>0 -0.05 1.6 0 0 0</pose>

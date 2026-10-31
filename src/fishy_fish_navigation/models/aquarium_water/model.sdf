@@ -8,11 +8,13 @@
     surface      z = 1.6
     glass rim    z ~ 1.86
 
-  Every visual carries visibility_flags 2 (0x2). The gpu_lidar and the camera
-  in urdf/mogi_bot.gazebo use visibility_mask 1073741821 (0x3FFFFFFD: all bits except 0x2;
-  ogre2 reserves the top two bits),
-  so /scan, the SLAM map and the color detector never see the water.
-  The GUI camera uses the default mask and therefore shows it.
+  Every visual carries visibility_flags 4 (0x4). The gpu_lidar and the camera
+  in urdf/mogi_bot.gazebo use visibility_mask 1073741819 (0x3FFFFFFB: all bits
+  except 0x4; ogre2 reserves the top two bits), so /scan, the SLAM map and the
+  color detector never see the water. The GUI camera uses the default mask and
+  therefore shows it. Not 0x2: that is GZ_VISIBILITY_SELECTABLE, which would
+  make the water (and its large fog-shell bounds) catch every click and the
+  orbit/zoom pivot in the Gazebo GUI.
 
   Shader visuals use swishy::WaterShaderParam (package swishy_water): gz-sim's
   ShaderParam with depth writes off, so the transparent effects blend with each
@@ -43,7 +45,7 @@
                water when the GUI camera dives below the surface -->
           <double_sided>true</double_sided>
         </material>
-        <visibility_flags>2</visibility_flags>
+        <visibility_flags>4</visibility_flags>
       </visual>
 
       <!-- Step 3: moving Gerstner-wave surface, drawn on the GPU. Shaders are
@@ -53,7 +55,7 @@
           <mesh><uri>meshes/water_grid.obj</uri></mesh>
         </geometry>
         <cast_shadows>false</cast_shadows>
-        <visibility_flags>2</visibility_flags>
+        <visibility_flags>4</visibility_flags>
         <plugin filename="swishy-water-shader-system"
                 name="swishy::WaterShaderParam">
           <depth_write>false</depth_write>
@@ -107,7 +109,7 @@
           <mesh><uri>meshes/water_grid.obj</uri></mesh>
         </geometry>
         <cast_shadows>false</cast_shadows>
-        <visibility_flags>2</visibility_flags>
+        <visibility_flags>4</visibility_flags>
         <plugin filename="swishy-water-shader-system"
                 name="swishy::WaterShaderParam">
           <depth_write>false</depth_write>
@@ -162,7 +164,7 @@
           <mesh><uri>meshes/sand_caustics.obj</uri></mesh>
         </geometry>
         <cast_shadows>false</cast_shadows>
-        <visibility_flags>2</visibility_flags>
+        <visibility_flags>4</visibility_flags>
         <plugin filename="swishy-water-shader-system"
                 name="swishy::WaterShaderParam">
           <depth_write>false</depth_write>
@@ -190,7 +192,7 @@
           <mesh><uri>meshes/fog_shells.obj</uri></mesh>
         </geometry>
         <cast_shadows>false</cast_shadows>
-        <visibility_flags>2</visibility_flags>
+        <visibility_flags>4</visibility_flags>
         <plugin filename="swishy-water-shader-system"
                 name="swishy::WaterShaderParam">
           <depth_write>false</depth_write>
@@ -215,7 +217,7 @@
           <mesh><uri>meshes/god_rays.obj</uri></mesh>
         </geometry>
         <cast_shadows>false</cast_shadows>
-        <visibility_flags>2</visibility_flags>
+        <visibility_flags>4</visibility_flags>
         <plugin filename="swishy-water-shader-system"
                 name="swishy::WaterShaderParam">
           <depth_write>false</depth_write>
@@ -241,7 +243,7 @@
           <mesh><uri>meshes/bubbles.obj</uri></mesh>
         </geometry>
         <cast_shadows>false</cast_shadows>
-        <visibility_flags>2</visibility_flags>
+        <visibility_flags>4</visibility_flags>
         <plugin filename="swishy-water-shader-system"
                 name="swishy::WaterShaderParam">
           <depth_write>false</depth_write>

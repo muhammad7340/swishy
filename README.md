@@ -264,8 +264,9 @@ The tank is filled with visual-only water from `models/aquarium_water/`:
 - **Light shafts**: soft, swaying strips from the surface to the sand (underwater only).
 - **Bubbles**: three columns of bubbles animated entirely in a vertex shader.
 - **Water volume**: a transparent tinted box from the surface (z = 1.6 m) to the sand.
-- **Sensor-safe**: every water visual has `visibility_flags` 2, and the robot's
-  `gpu_lidar` and camera use `visibility_mask` 1073741821 (all bits except 0x2).
+- **Sensor-safe**: every water visual has `visibility_flags` 4, and the robot's
+  `gpu_lidar` and camera use `visibility_mask` 1073741819 (all bits except 0x4; 0x2 would make the
+  water catch clicks in the Gazebo GUI).
   `/scan`, the SLAM map and the color detector don't see the water, so Nav2 and
   SLAM behave exactly as before. There are no collisions, so physics is unchanged.
 
