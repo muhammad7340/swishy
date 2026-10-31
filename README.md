@@ -349,3 +349,5 @@ Built with:
   textures used by the aquarium water, originally from UUV Simulator / Rhys Mainwaring
 - [gz-sim](https://github.com/gazebosim/gz-sim) (Apache 2.0): `ShaderParam` system,
   adapted as `swishy::WaterShaderParam` in `src/swishy_water`
+- Kelp and Ocean Rock models by Cole Biesemeyer, [Gazebo Fuel](https://fuel.gazebosim.org/1.0/Cole),
+  CC-BY 4.0 (rescaled, textures downscaled to 1024², rock texture desaturated)

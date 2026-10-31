@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!-- Kelp 03: 0.62 m tall after scaling (mesh 1.51 m, scale 0.6 0.6 0.41).
+     Soft decor: no collision, visibility_flags 8 keeps it out of the gpu_lidar
+     (its visibility_mask excludes 0x8) while the camera and GUI still see it. -->
+<sdf version="1.8">
+  <model name="kelp_03">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>meshes/Kelp03.dae</uri>
+            <scale>0.6 0.6 0.41</scale>
+          </mesh>
+        </geometry>
+        <cast_shadows>true</cast_shadows>
+        <material>
+          <diffuse>1 1 1 1</diffuse>
+          <specular>0.1 0.1 0.1 1</specular>
+          <double_sided>true</double_sided>
+          <pbr>
+            <metal>
+              <albedo_map>model://kelp_01/materials/textures/Kelp_Albedo.png</albedo_map>
+              <roughness>0.8</roughness>
+              <metalness>0</metalness>
+            </metal>
+          </pbr>
+        </material>
+        <visibility_flags>8</visibility_flags>
+      </visual>
+    </link>
+  </model>
+</sdf>
