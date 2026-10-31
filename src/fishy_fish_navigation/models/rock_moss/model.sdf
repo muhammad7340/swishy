@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!-- rock_moss: Quaternius Rock_Moss_2 (CC0), 0.34 m tall, 0.38 m across (scale 0.4920).
+     The OBJ is Y-up, so the visual is rolled 90 deg; model origin = centre of the base.
+     Hard decor: default visibility flags (mapped by the LiDAR), cylinder collision r 0.171 m.
+     Recoloured in the .mtl (Rock) to stay out of the color detector's ranges. -->
+<sdf version="1.8">
+  <model name="rock_moss">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <pose>0 0 0.1702 0 0 0</pose>
+        <geometry><cylinder><radius>0.171</radius><length>0.340</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>-0.0090 -0.0060 0.0624 1.5708 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Rock_Moss_2.obj</uri>
+            <scale>0.4920 0.4920 0.4920</scale>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

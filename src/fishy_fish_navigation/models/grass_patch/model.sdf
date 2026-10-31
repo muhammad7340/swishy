@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!-- grass_patch: Quaternius Grass_Short (CC0), 0.18 m tall, 0.22 m across (scale 0.4528).
+     The OBJ is Y-up, so the visual is rolled 90 deg; model origin = centre of the base.
+     Soft decor: no collision; visibility_flags 8 keeps it out of the gpu_lidar. -->
+<sdf version="1.8">
+  <model name="grass_patch">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <pose>0.0141 -0.0175 -0.0026 1.5708 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Grass_Short.obj</uri>
+            <scale>0.4528 0.4528 0.4528</scale>
+          </mesh>
+        </geometry>
+        <visibility_flags>8</visibility_flags>
+      </visual>
+    </link>
+  </model>
+</sdf>

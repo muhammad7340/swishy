@@ -351,3 +351,5 @@ Built with:
   adapted as `swishy::WaterShaderParam` in `src/swishy_water`
 - Kelp and Ocean Rock models by Cole Biesemeyer, [Gazebo Fuel](https://fuel.gazebosim.org/1.0/Cole),
   CC-BY 4.0 (rescaled, textures downscaled to 1024², rock texture desaturated)
+- Nature models (cacti, mossy rock, driftwood, grass, fern, lily pad) by
+  [Quaternius](https://quaternius.com), Ultimate Nature Pack, CC0
