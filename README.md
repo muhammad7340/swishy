@@ -372,6 +372,32 @@ Python utility package providing command-line tools for:
 - Initial pose setting
 - Waypoint navigation
 
+## Git Workflow
+
+`feature/*` → PR into `dev` → test → PR `dev` into `main`.
+
+- `main`: stable, only gets `dev` through a PR.
+- `dev`: development; every feature merges here first.
+- `feature/<name>`: one change, cut from `dev`, deleted after merge.
+
+```bash
+# start a feature
+git switch dev && git pull
+git switch -c feature/<name>
+
+# work, then push
+git add <files> && git commit -m "What changed"
+git push -u origin feature/<name>
+# GitHub: open PR, base = dev, merge it (branch auto-deletes)
+
+# afterwards, clean up locally
+git switch dev && git pull && git branch -d feature/<name> && git fetch --prune
+
+# release: when dev works in the sim
+# GitHub: open PR, base = main, compare = dev, merge it
+git switch main && git pull && git switch dev
+```
+
 ## License
 
 Apache License 2.0
