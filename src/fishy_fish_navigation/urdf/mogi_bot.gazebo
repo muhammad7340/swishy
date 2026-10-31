@@ -3,6 +3,10 @@
   <gazebo>
     <plugin filename="gz_ros2_control-system" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
       <parameters>${fish_control_yaml}</parameters>
+      <!-- Position joints are driven as velocity = gain * error / step. The
+           default 0.1 lags ~0.2 s, so a 2 Hz tail beat reached only a third
+           of its commanded swing; 0.6 tracks it to ~90%. -->
+      <position_proportional_gain>0.6</position_proportional_gain>
     </plugin>
   </gazebo>
 
