@@ -1,393 +1,295 @@
-# 🐟 Swishy: A Bio-inspired Robotic Fish with Undulatory Locomotion and Autonomous SLAM-based Navigation using ROS2
+# 🐟 Swishy: A Bio-inspired Robotic Fish with Undulatory Locomotion and Autonomous SLAM-based Navigation using ROS 2
 
-![Robot in Gazebo](assets/swishy.png)
+![Swishy swimming in its aquarium](assets/swishy_hero.png)
 
-**Biological inspiration and motion model.** Swishy is a research-oriented simulation platform for studying how body-caudal-fin (BCF) swimming principles can be coupled with autonomous robotic navigation. Fish generate propulsive and steering motions by passing a w
+Swishy is a research-oriented simulation platform for studying how body-caudal-fin
+(BCF) swimming can be coupled with autonomous robot navigation. A three-joint body
+wave drives a fish-shaped robot that maps its aquarium with SLAM, plans with Nav2,
+sees through a camera in each eye and swims choreographed missions, all in
+ROS 2 Jazzy and Gazebo Harmonic.
 
-ave of lateral curvature from the body toward the caudal fin.
+**Contents:**
+[Quick start](#quick-start) ·
+[Manual start](#manual-start) ·
+[1. Body](#1-body-a-traveling-body-wave) ·
+[2. Senses](#2-senses-fish-eyes-lidar-and-imu) ·
+[3. Habitat](#3-habitat-the-aquarium) ·
+[4. Mapping](#4-mapping-slam-toolbox) ·
+[5. Navigation](#5-navigation-nav2) ·
+[6. Missions](#6-missions-showcase-modes) ·
+[Repository](#repository) ·
+[Git workflow](#git-workflow)
 
-![Robot in Gazebo](assets/fish_anatomy.png)
+| Capability | How |
+|---|---|
+| Fish-like swimming | Traveling wave over three tail joints, 1.2 to 2.4 Hz, synced to velocity commands |
+| Vision | An invisible camera in each eye, looking out its own side like a real fish |
+| Mapping | SLAM Toolbox: 360° LiDAR, scan matching, loop closure, 5 cm occupancy map |
+| Localization | SLAM Toolbox localization on the saved map |
+| Navigation | Nav2: NavFn global planner, DWB controller, inflated costmaps, collision monitor |
+| Missions | Showcase, patrol, dance, explorer and interactive modes, checked against a safety envelope |
+| Habitat | Aquascaped tank: rippling water, fog, caustics, bubbles, swaying kelp, rocks, cacti |
 
- Swishy approximates this behavior across three articulated joints as
+## Quick start
 
-$q_i(t)=b_i\kappa(t)+a_iA(s)\sin(\phi(t)-i\Delta\phi)$, with $\dot{\phi}=2\pi f(s)$. 
-
-Here, $A(s)$ and $f(s)$ increase with commanded activity, $\kappa$ introduces a turning bias, and the posteriorly increasing coefficients $a_i$ produce larger motion toward the tail. The implemented gait uses $\Delta\phi=\pi/3$, a maximum tail angle of $0.55$ rad, and a speed-dependent frequency of $1.2$-$2.4$ Hz, following the traveling-wave abstraction widely used in [bio-inspired robotic-fish research](https://doi.org/10.3390/jmse10060773).
-
-**Robotic and simulation implementation.** A custom ROS 2 gait controller converts Nav2 velocity commands into bounded, rate-limited joint trajectories at 50 Hz and rotates body-frame speed into the world frame using:
-
- $[\dot{x},\dot{y},\dot{\psi}]^T=[v\cos\psi,v\sin\psi,\omega]^T$
-
-The joint wave is executed through `ros2_control` and a forward position controller, while Gazebo Harmonic provides articulated rigid-body dynamics, contact, buoyancy, odometry, and simulated LiDAR, IMU, camera, and NavSat sensing. The current platform deliberately separates visible gait generation from planar propulsion: translation is applied through constrained planar joints rather than being derived from CFD-resolved tail thrust. This controlled abstraction makes gait-navigation experiments stable and repeatable while leaving a clear research path toward hydrodynamic force models, fluid-structure interaction, and physical validation.
-
-**Autonomy and research applications.** A 360-degree LiDAR feeds SLAM Toolbox, where scan matching and loop closure estimate a 5 cm-resolution occupancy map through pose-graph optimization, conceptually:
-
- $\mathbf{x}^{*}=\arg\min_{\mathbf{x}}\sum_k\lVert\mathbf{r}_k(\mathbf{x})\rVert_{\Omega_k}^{2}$. 
-
-Nav2 then combines NavFn global planning, DWB local trajectory control, layered obstacle/inflation costmaps, and collision monitoring with custom figure-eight, patrol, exploration, dance, and interactive mission modes. 
-
-**Research & Applications.** This implementation project supports research into bio-inspired autonomy, gait-command coupling, confined-space navigation, and sensor-driven behavior, with prospective applications in low-disturbance aquatic monitoring, infrastructure inspection, habitat observation, education, and the development of animal-inspired robots for environments where conventional propellers may be intrusive or difficult to maneuver.
-
-## Overview
-
-This repository contains a complete navigation solution for a fish robot that combines:
-
-- **Biomimetic Motion**: Fish-like undulating motion control
-- **SLAM Mapping**: Real-time map building using SLAM Toolbox
-- **Localization**: Pose estimation in known environments
-- **Autonomous Navigation**: Path planning and obstacle avoidance with Nav2
-- **Simulation**: Full Gazebo Harmonic integration
-
-The system is designed for ROS2 Jazzy and uses modern navigation tools to enable autonomous operation of a unique biomimetic robot platform.
-
-## Repository Structure
-
-```
-swishy/
-├── assets/                    # Result images and screenshots
-│   ├── spawn_robot_gazeebo.png
-│   ├── mapping.png
-│   ├── localization.png
-│   └── navigation.png
-├── src/                       # ROS2 packages
-│   ├── fishy_fish_navigation/      # Main navigation package
-│   ├── fishy_fish_navigation_py/  # Python utility package
-│   └── README.md                   # Detailed documentation
-└── README.md                  # This file
-```
-
-## Key Features
-
-- **Biomimetic Motion**: Speed-scaled traveling body wave synchronized with
-  planar navigation commands
-- **SLAM Mapping**: Real-time map building with loop closure
-- **Localization**: Accurate pose estimation using pre-built maps
-- **Autonomous Navigation**: Nav2-based path planning and execution
-- **Gazebo Simulation**: Full physics simulation with sensors (LiDAR, IMU, two eye cameras)
-- **Fish Eyes**: an invisible camera in each eye looks out its own side, 40° forward
-  of sideways, like a real fish (`/left_eye/image`, `/right_eye/image`; the color
-  detector uses the left eye)
-- **Aquarium Water**: GPU-shaded rippling surface, underwater fog, caustics, light
-  shafts and rising bubbles, all visual-only and hidden from the LiDAR and cameras
-  (see below)
-- **Modular Design**: Separate packages for core functionality and utilities
-
-## Quick Start
-
-### Prerequisites
-
-- ROS2 Jazzy
-- Gazebo Harmonic
-- Required ROS2 packages:
-  - `nav2_bringup`
-  - `slam_toolbox`
-  - `robot_localization`
-  - `ros_gz_sim`
-  - `ros_gz_bridge`
-
-### Building
-
-For a fresh machine or after ROS packages have been added or upgraded, use the
-project bootstrap script:
-
-```bash
-cd ~/swishy
-./scripts/setup_workspace.sh --install
-```
-
-This refreshes apt metadata, upgrades the ABI-coupled ROS 2 control and
-middleware packages as one set, installs dependencies declared in
-`package.xml` with `rosdep`, and builds the workspace. It intentionally follows
-the current ROS 2 Jazzy apt repository versions instead of pinning timestamped
-Debian builds, which are removed from the repository over time.
-
-To audit the environment without installing or changing anything:
-
-```bash
-./scripts/setup_workspace.sh --check
-```
-
-The manual equivalent for routine builds is:
+Build once (on a fresh machine, `./scripts/setup_workspace.sh --install` installs
+the ROS dependencies and builds; `--check` only audits):
 
 ```bash
 cd ~/swishy
 source /opt/ros/jazzy/setup.bash
 rosdep install --from-paths src --ignore-src -r -y
 colcon build --symlink-install
-source install/setup.bash
 ```
 
-Source `install/setup.bash` in every new terminal used for this project. This
-workspace is an overlay, so sourcing it after the ROS Jazzy underlay (and any
-other workspace you intentionally need) makes the fish robot packages take
-precedence without changing those installations.
-
-### Running
-
-**0. First time running full flow:**
+Then start everything with one command. It opens one Terminator window with a pane
+per part (Gazebo, SLAM or localization with Nav2 and RViz, the mission, teleop and
+both eye-camera viewers); each pane prints the manual command it runs.
 
 ```bash
-# Terminal 1
-source /opt/ros/jazzy/setup.bash
-source ~/swishy/install/setup.bash
+scripts/swishy.sh                          # build a new map (SLAM + Nav2), drive with teleop
+scripts/swishy.sh --map --mode patrol      # use the saved map, patrol the four corners
+scripts/swishy.sh --map --mode showcase --loop
+scripts/swishy.sh --stop                   # stop everything, including a stray Gazebo
+```
+
+| Flag | Effect |
+|---|---|
+| `--slam` (default) / `--map` | Build a new map while navigating / navigate on `maps/` |
+| `--mode MODE` | `showcase`, `patrol`, `dance`, `explorer`, `interactive` or `none` (default) |
+| `--loop` | Repeat the mission |
+| `--no-teleop`, `--no-eyes` | Skip the teleop pane / the eye-camera viewers |
+
+Teleop: click its pane, then use `i` `j` `k` `l` (`,` backwards, `k` stop).
+Always stop with `scripts/swishy.sh --stop` (or Ctrl-C in each pane); closing the
+window can leave a Gazebo server running, which makes the next run stutter.
+
+## Manual start
+
+The same stack by hand, one terminal each. Source ROS and the workspace in every
+terminal first:
+
+```bash
+source /opt/ros/jazzy/setup.bash && source ~/swishy/install/setup.bash
+```
+
+```bash
+# 1. Gazebo: aquarium, Swishy, bridges, gait controller
 ros2 launch fishy_fish_navigation spawn_robot.launch.py
 
-# Terminal 2
-source /opt/ros/jazzy/setup.bash
-source ~/swishy/install/setup.bash
-ros2 launch fishy_fish_navigation navigation_with_slam.launch.py rviz:=false
+# 2a. Build a new map while navigating (SLAM Toolbox mapping + Nav2 + RViz)
+ros2 launch fishy_fish_navigation navigation_with_slam.launch.py
+# 2b. ...or navigate on the saved map (SLAM Toolbox localization + Nav2 + RViz)
+ros2 launch fishy_fish_navigation navigation_with_map.launch.py
+#     if the robot is not at the origin, give its pose:
+ros2 run fishy_fish_navigation_py send_initialpose --ros-args -p x:=0.0 -p y:=0.0 -p yaw:=0.0
 
-ros2 action list | grep follow_waypoints
-ros2 run fishy_fish_navigation_py follow_waypoints
-```
-
-### Presentation Navigation Modes
-
-Start Gazebo and Nav2 using the first two terminals above. In a third terminal,
-launch one presentation mode:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-source ~/swishy/install/setup.bash
-
-# Smooth figure-eight, obstacle orbit, pauses, and return home
-ros2 launch fishy_fish_navigation_py showcase_navigation.launch.py mode:=showcase
-
-# Continuous safe random exploration
-ros2 launch fishy_fish_navigation_py showcase_navigation.launch.py mode:=explorer
-
-# Obstacle-aware perimeter patrol
+# 3. A mission (once Nav2 is up)
 ros2 launch fishy_fish_navigation_py showcase_navigation.launch.py mode:=patrol
 
-# Circles, S-curves, and a compact figure-eight
-ros2 launch fishy_fish_navigation_py showcase_navigation.launch.py mode:=dance
-
-# Accept goals from RViz or /detected_object_goal
-ros2 launch fishy_fish_navigation_py showcase_navigation.launch.py mode:=interactive
-```
-
-Repeat a finite mode until it is stopped:
-
-```bash
-ros2 launch fishy_fish_navigation_py showcase_navigation.launch.py \
-  mode:=showcase loop:=true
-```
-
-The active choreography path is published on `/swishy/showcase/path`, and a
-human-readable state is published on `/swishy/showcase/status`. Add a `Path`
-display in RViz using the path topic to show the audience where Swishy is
-going.
-
-Presentation settings are centralized in
-`src/fishy_fish_navigation_py/config/showcase_profiles.yaml`. The configured
-safety model includes the approximately 4 x 4 m aquarium interior, Swishy's
-radius, wall clearance, the cylinder at `(1.0, 0.8)`, and the box at
-`(-1.3, 0.85)`. Nav2 plans obstacle-aware transitions and the collision monitor
-remains active while custom curves are followed.
-
-Interactive mode accepts `geometry_msgs/PoseStamped` goals on `/goal_pose`.
-It also reserves `/detected_object_goal` for a future perception/localization
-node. The current color detector draws camera bounding boxes but does not yet
-estimate an object's pose in the map frame.
-
-**1. Spawn Robot in Gazebo:**
-
-```bash
-ros2 launch fishy_fish_navigation spawn_robot.launch.py
-```
-
-**2. Start Mapping (Optional):**
-
-```bash
-ros2 launch fishy_fish_navigation mapping.launch.py
-```
-
-**3. Start Navigation with slam:**
-
-```bash
-ros2 launch fishy_fish_navigation navigation_with_slam.launch.py
-```
-
-**4. Control navigation using teleop:**
-
-```bash
+# 4. Keyboard driving
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
-```
 
-### Viewing the Eye Cameras
-
-With the sim running, open one window per eye; both update live as Swishy moves (5 Hz):
-
-```bash
+# 5. The eye cameras, one window each
 ros2 run rqt_image_view rqt_image_view /left_eye/image
 ros2 run rqt_image_view rqt_image_view /right_eye/image
 ```
 
-In RViz, tick the Camera display (left eye), or add a second Camera display with topic
-`/right_eye/image/compressed`.
-
-### Running after Modifications
-
-After making changes to the source code like `.urdf` or `.launch.py` files, rebuild the workspace:
+Save a map built in 2a (this overwrites the saved map):
 
 ```bash
-colcon build --packages-select fishy_fish_navigation --symlink-install
-source install/setup.bash
-ros2 launch fishy_fish_navigation spawn_robot.launch.py
+ros2 service call /slam_toolbox/serialize_map slam_toolbox/srv/SerializePoseGraph \
+  "{filename: '$HOME/swishy/src/fishy_fish_navigation/maps/serialized'}"
+ros2 run nav2_map_server map_saver_cli -f ~/swishy/src/fishy_fish_navigation/maps/map
 ```
 
-For detailed documentation, see [src/README.md](src/README.md).
+After changing a `.urdf`, launch file or script, rebuild with
+`colcon build --symlink-install` and source `install/setup.bash` again.
+[src/README.md](src/README.md) documents every node, topic and launch file.
 
-## Visual Results
+## 1. Body: a traveling body wave
 
-### Robot Spawned in Gazebo
+![Fish anatomy](assets/fish_anatomy.png)
 
-![Robot in Gazebo](assets/acquarium.png)
+Fish swim by passing a wave of lateral curvature from the body toward the caudal
+fin. Swishy approximates this over three tail joints:
 
-The fish robot model spawned in the Gazebo simulation environment with all sensors active (LiDAR, IMU, Camera).
+$q_i(t)=b_i\kappa(t)+a_iA(s)\sin(\phi(t)-i\Delta\phi)$, with $\dot{\phi}=2\pi f(s)$.
 
-### SLAM Mapping
+Coefficients $a_i$ grow toward the tail, $\Delta\phi=\pi/3$ makes each joint lag
+the one ahead of it, and $\kappa$ bends the body into turns. Like a real fish, the
+swing stays large at any swimming speed (at least 60% of the 0.55 rad maximum) and
+the tail beats faster to go faster, $f(s)$ from 1.2 to 2.4 Hz
+([bio-inspired robotic-fish research](https://doi.org/10.3390/jmse10060773)).
 
-![SLAM Mapping](assets/mapping.png)
+![Tail joint angles while swimming](assets/tail_wave.png)
 
-Real-time SLAM mapping in progress. The robot builds a map of the environment using LiDAR scans while exploring the world.
+Measured joint angles (degrees) over 3 s of sim time at 0.3 m/s. Blue: joint 1,
+nearest the head (±11°); orange: joint 2 (±18°); aqua: joint 3 at the tail (±25°).
+Each lags the one before it, so the wave travels head to tail.
 
-### Localization
+A ROS 2 gait controller (`publisher.py`) turns Nav2's velocity commands into these
+joint targets at 50 Hz and moves the body in the plane:
+$[\dot{x},\dot{y},\dot{\psi}]^T=[v\cos\psi,v\sin\psi,\omega]^T$. Translation goes
+through constrained planar joints rather than CFD-resolved tail thrust: a deliberate
+abstraction that keeps gait-navigation experiments stable and repeatable, and leaves
+a clear path toward hydrodynamic force models and physical validation.
 
-![Localization](assets/localization.png)
+## 2. Senses: fish eyes, LiDAR and IMU
 
-Robot localizing itself in a pre-built map. The pose estimate is shown with uncertainty visualization, allowing the robot to know its position in the known environment.
+![Left eye, both fields of view from above, right eye](assets/eye_cameras.png)
 
-### Autonomous Navigation
+An invisible camera sits in the centre of each eye and looks out its own side,
+like a real fish. Left: the left eye's image (blue border). Middle: the map from
+above with Swishy facing right and each eye's field of view. Right: the right eye's
+image (orange border). Each eye covers 10° to 90° off the heading on its own side,
+so together they span 160° with a 20° blind spot straight ahead and no overlap.
 
-![Navigation](assets/navigation.png)
+| Eye cameras | |
+|---|---|
+| Mounting | In each eyeball, 4.5 cm behind the body origin, 10 cm up |
+| Direction | 50° left / 50° right of straight ahead (40° forward of sideways) |
+| Field of view | 80° horizontal each, 320 × 240 px |
+| Rate | 5 Hz each (both together render as many frames as one 10 Hz camera) |
+| Near clip | 0.1 m, so the camera does not see its own eyeball and head |
+| Topics | `/left_eye/image`, `/right_eye/image` (+ `/compressed`), `/<side>_eye/camera_info` |
+| Frames | `left_eye_camera_optical`, `right_eye_camera_optical` |
 
-Autonomous navigation in action. Nav2 plans paths to goals while avoiding obstacles, using both global and local costmaps for safe navigation.
+The colour detector (`object_detection_node.py`) and RViz's camera display use the
+left eye.
 
-### Aquarium Water
+![One LiDAR scan](assets/lidar_scan.png)
 
-The tank is filled with visual-only water from `models/aquarium_water/`:
+One 360° LiDAR scan (blue rays, orange hits) from the middle of the tank, over the
+saved map. The GPU LiDAR has 360 beams, 0.05 to 10 m range and runs at 10 Hz; it
+sees the glass, the box, the cylinder and the hard decor, but not the water, kelp or
+grass (see [Habitat](#3-habitat-the-aquarium)). An IMU at 50 Hz and the odometry
+feed a `robot_localization` EKF.
 
-- **Rippling surface**: three gentle Gerstner waves (wavelengths 1.5 / 0.9 / 0.55 m)
-  drawn on the GPU. A flipped copy (`surface_underside`) shows the surface from
-  below. Tune `amplitude`, `omega` and `alpha` (opacity) in `model.sdf`.
-- **Underwater fog**: Gazebo's renderer has no fog, so 40 nested shells are
-  re-centred on the camera by a vertex shader. An object `d` metres away is
-  tinted by `1 - exp(-density * d)`; only drawn while the camera is under water.
-- **Caustics**: an animated web of refracted light on the sand, drawn on a copy
-  of the sand quad lifted 4 mm.
-- **Light shafts**: soft, swaying strips from the surface to the sand (underwater only).
-- **Bubbles**: three columns of bubbles animated entirely in a vertex shader.
-- **Water volume**: a transparent tinted box from the surface (z = 1.6 m) to the sand.
-- **Sensor-safe**: every water visual has `visibility_flags` 4. The robot's eye cameras
-  use `visibility_mask` 1073741819 (all bits except 0x4) and the `gpu_lidar`
-  1073741811 (also without 0x8, the soft decor below); 0x2 would make the water
-  catch clicks in the Gazebo GUI.
-  `/scan`, the SLAM map and the color detector don't see the water, so Nav2 and
-  SLAM behave exactly as before. There are no collisions, so physics is unchanged.
-
-The shader visuals use `swishy::WaterShaderParam` from the `swishy_water` package:
-gz-sim's `ShaderParam` with depth writes switched off. The stock system leaves
-depth writes on, so each transparent effect would hide everything behind it.
-Sourcing the workspace puts the plugin on `GZ_SIM_SYSTEM_PLUGIN_PATH`.
-
-Regenerate the meshes after changing the tank size with
-`python3 scripts/make_water_grid.py [out.obj] [size_x] [size_y] [cells_per_m]` (surface) and
-`python3 scripts/make_aquarium_effects.py` (fog shells, light shafts, bubbles, caustics).
-
-### Aquarium Decor
+## 3. Habitat: the aquarium
 
 ![Aquarium from above](assets/decor_top.png)
 
 ![Aquarium, angled view](assets/decor_side.png)
 
-![Aquarium under water](assets/decor_underwater.png)
+![Inside the aquarium](assets/aquatic_habitat.png)
 
-The tank is aquascaped with local models in `src/fishy_fish_navigation/models/`:
+Inside the tank (left to right, top to bottom): kelp against the painted backdrop;
+the cactus centrepiece with its pebble; a starfish and shells by the front glass;
+lily pads seen from below; rising bubbles over the grass; kelp and rocks.
 
-- **Kelp** along the back and side glass (Fuel kelp, swaying in a vertex shader;
-  each plant gets its own phase from its position, so they never move in sync).
-- **Focal point**: a tall cactus with a pebble at (−0.30, 0.60).
-- **Corners**: cacti, rocks and a mossy driftwood log.
-- **Carpet**: grass and fern patches, shells and a starfish near the front glass,
-  lily pads on the surface and a painted blue backdrop on the back glass.
-- **Lighting**: sun and a spot light over the focal point cast shadows; the second
-  spot over the kelp does not (three shadow casters made the simulation stall on
-  integrated graphics).
+**Water** (`models/aquarium_water/`), all visual-only and drawn on the GPU:
+a rippling surface from three Gerstner waves, underwater fog, caustics on the sand,
+swaying light shafts, rising bubbles and a tinted water volume. Gazebo's renderer
+has no fog, so 40 nested shells are re-centred on the camera by a vertex shader.
+The shaders use `swishy::WaterShaderParam` (`src/swishy_water`): gz-sim's
+`ShaderParam` with depth writes switched off, so transparent effects blend instead
+of hiding what is behind them.
 
-Sensors and navigation:
+**Decor** (`models/`): Fuel kelp swaying in a vertex shader (each plant out of step
+with the others), a cactus-and-pebble centrepiece, cacti, rocks and a driftwood log
+in the corners, grass and ferns, shells, a starfish, lily pads and a painted
+backdrop. The sun and a spot light over the centrepiece cast shadows.
 
-- **Soft decor** (kelp, grass, shells, starfish, lily pads, backdrop) has no
-  collision and `visibility_flags` 8, so the LiDAR never sees it and Swishy can
-  brush through the kelp. The camera still sees it.
-- **Hard decor** (cacti, rocks, driftwood) keeps the default flags and simple
-  cylinder/box collisions, so it is mapped. Everything at scan height is listed in
-  `obstacle_centers`/`obstacle_radii` in `showcase_profiles.yaml`, and
-  `test_navigation_patterns.py` checks every showcase route against that list.
-- **Colors** stay outside the color detector's HSV ranges: green plants, pink
-  starfish, cream shells, desaturated rocks and driftwood. The camera's only
-  decor match is a few gray-range pixels on the focal pebble at close range.
-- `maps/` was re-mapped with the decor in place.
+**Sensor-safe by design:**
+- Water visuals carry `visibility_flags` 4 and soft decor (kelp, grass, shells,
+  starfish, lily pads, backdrop) 8. The LiDAR's mask hides both and the eye cameras
+  hide only the water, so `/scan` and the map are unchanged while the cameras still
+  see the plants.
+- Soft decor has no collision (Swishy can brush through kelp); hard decor (cacti,
+  rocks, driftwood) has simple collisions and is mapped.
+- Decor colours stay outside the colour detector's HSV ranges.
 
-Change the layout in `scripts/layout_decor.py`, which checks every route and
-patrol leg and rewrites the decor block in `fish_world.sdf`. The shells, starfish
-and backdrop come from `scripts/make_decor_assets.py`; the double-sided kelp
-meshes for the sway shader from `scripts/make_kelp_sway_meshes.py`.
+Change the layout in `scripts/layout_decor.py`, which checks every route and rewrites
+the decor block in `fish_world.sdf`. The water meshes come from
+`scripts/make_water_grid.py` and `scripts/make_aquarium_effects.py`, the shells,
+starfish and backdrop from `scripts/make_decor_assets.py`, and the double-sided
+kelp from `scripts/make_kelp_sway_meshes.py`.
 
-## Documentation
+## 4. Mapping: SLAM Toolbox
 
-For comprehensive documentation including:
+![Saved map with the patrol path](assets/map_trajectory.png)
 
-- Detailed node descriptions
-- Launch file explanations
-- Configuration guides
-- Troubleshooting tips
-- Complete workflow diagrams
+The saved map (`maps/`) with the path Swishy swam on one patrol (blue), the four
+patrol stations (orange) and its start pose (aqua). SLAM Toolbox builds a 5 cm
+occupancy grid from the LiDAR by scan matching and pose-graph optimization with
+loop closure, conceptually
+$\mathbf{x}^{*}=\arg\min_{\mathbf{x}}\sum_k\lVert\mathbf{r}_k(\mathbf{x})\rVert_{\Omega_k}^{2}$.
+Dark cells are walls and obstacles; the rounded shapes are the box, the cylinder,
+the centrepiece and the tank's own rocks and coral.
 
-Please refer to [src/README.md](src/README.md).
+## 5. Navigation: Nav2
 
-## Relevant Files:
+![Global costmap and planned path](assets/costmap_plan.png)
 
-- `src/fishy_fish_navigation/src/publisher.py`: gait equations, tail-joint wave, steering, speed scaling, and planar kinematics.
-- `src/fishy_fish_navigation/urdf/swishy.urdf`: body geometry, articulated links, joints, inertial properties, and limits.
-- `src/fishy_fish_navigation/urdf/swishy.gazebo`: planar-motion constraints, Gazebo controllers, odometry, and sensors.
-- `src/fishy_fish_navigation/config/fish_control.yaml`: 50 Hz `ros2_control` joint-position controller configuration.
+Nav2's global costmap during a patrol leg. Obstacles inflate outward (light to dark
+blue as cost rises, dark navy where the robot's centre would collide), the orange
+line is NavFn's planned path through the low-cost corridors, the aqua circle is the
+robot's 0.22 m footprint and the dashed yellow square is the 3 × 3 m rolling local
+costmap the DWB controller drives on.
 
-## Additional Repositories
+| Nav2 | |
+|---|---|
+| Global planner | NavFn on the static map + obstacle layer, 1 Hz |
+| Controller | DWB, up to 0.5 m/s and 1.5 rad/s, goal tolerance 0.25 m |
+| Costmaps | 5 cm cells, robot radius 0.22 m, inflation 0.70 m |
+| Safety | Collision monitor on the LiDAR, active during custom paths |
 
-1. [github.com/osrf/vrx/tree/jazzy](https://github.com/osrf/vrx/tree/jazzy)
+## 6. Missions: showcase modes
 
- 2. [ioes-lab.github.io/POSIM](https://ioes-lab.github.io/POSIM/)
+![Showcase routes and safety envelope](assets/showcase_routes.png)
 
-3. [github.com/AlePuglisi/MBARI-vehicles-sim-ros2](https://github.com/AlePuglisi/MBARI-vehicles-sim-ros2)
+The mission routes over the saved map: the figure-eight (blue), the orbit around the
+cylinder (orange), the dance circle and S-curve (aqua) and the patrol square
+(dashed yellow). Pink discs are each obstacle's safety envelope (its radius plus
+Swishy's 0.22 m radius plus 0.12 m clearance); `navigation_patterns.validate()`
+rejects any route point inside one, and `test_navigation_patterns.py` checks every
+route against `showcase_profiles.yaml`.
 
-4. [roscon.ros.org/2018/presentations/ROSCon2018_uuvsimulator.pdf](https://roscon.ros.org/2018/presentations/ROSCon2018_uuvsimulator.pdf)
+| Mode | What Swishy does |
+|---|---|
+| `showcase` | Figure-eight, orbit around the cylinder, pauses, back home |
+| `patrol` | Visits the four corners, then home |
+| `dance` | Double circle, S-curve and a compact figure-eight |
+| `explorer` | Random safe goals until stopped (`explorer_goal_count` limits it) |
+| `interactive` | Goes to goals from RViz's "2D Goal Pose" (`/goal_pose`) |
 
-5. [www.mdpi.com/2077-1312/10/6/773](https://www.mdpi.com/2077-1312/10/6/773) 
+```bash
+ros2 launch fishy_fish_navigation_py showcase_navigation.launch.py mode:=showcase loop:=true
+```
 
-6. [github.com/clydemcqueen/orca4](https://github.com/clydemcqueen/orca4)
+The active path is published on `/swishy/showcase/path` and the state on
+`/swishy/showcase/status`. Settings live in
+`src/fishy_fish_navigation_py/config/showcase_profiles.yaml`.
+Known issue: the orbit passes very close to the tank's own rock at (0.15, 0.95) and
+can stall there.
 
-7. [github.com/cagdasaktay/pool-simulator-uuv_sim](https://github.com/cagdasaktay/pool-simulator-uuv_sim)
+The figures in sections 2, 4, 5 and 6 are rendered from a recorded patrol by
+`scripts/make_readme_figures.py` (its header shows how to record the bag).
 
-8. [github.com/AlePuglisi/MBARI-vehicles-sim-ros2](https://github.com/AlePuglisi/MBARI-vehicles-sim-ros2)
+## Repository
 
-9. [github.com/srmainwaring/asv_wave_sim](https://github.com/srmainwaring/asv_wave_sim)
+```
+swishy/
+├── assets/                          README images
+├── scripts/
+│   ├── swishy.sh                    one-command launcher
+│   ├── setup_workspace.sh           dependency check / install + build
+│   ├── make_readme_figures.py       renders the technical figures from a bag
+│   └── layout_decor.py, make_*.py   aquarium layout and generated assets
+└── src/
+    ├── fishy_fish_navigation/       robot, world, launch files, configs, maps
+    │   ├── urdf/swishy.urdf          body, joints, eye cameras, LiDAR, IMU
+    │   ├── urdf/swishy.gazebo        Gazebo plugins and sensors
+    │   ├── src/publisher.py          gait controller (body wave + planar motion)
+    │   ├── worlds/fish_world.sdf     the aquarium
+    │   └── maps/                     saved map (serialized + pgm)
+    ├── fishy_fish_navigation_py/    showcase missions, map/pose utilities, tests
+    ├── swishy_water/                water shader system plugin
+    └── README.md                    detailed node and launch documentation
+```
 
-## Packages
-
-### `fishy_fish_navigation`
-
-Main navigation package containing launch files, configurations, robot models, and core nodes.
-
-### `fishy_fish_navigation_py`
-
-Python utility package providing command-line tools for:
-
-- Map loading
-- Initial pose setting
-- Waypoint navigation
-
-## Git Workflow
+## Git workflow
 
 `feature/*` → PR into `dev` → test → PR `dev` into `main`.
 
@@ -413,19 +315,25 @@ git switch dev && git pull && git branch -d feature/<name> && git fetch --prune
 git switch main && git pull && git switch dev
 ```
 
+## Related work
+
+1. [VRX](https://github.com/osrf/vrx/tree/jazzy)
+2. [POSIM](https://ioes-lab.github.io/POSIM/)
+3. [MBARI vehicles sim (ROS 2)](https://github.com/AlePuglisi/MBARI-vehicles-sim-ros2)
+4. [UUV Simulator, ROSCon 2018](https://roscon.ros.org/2018/presentations/ROSCon2018_uuvsimulator.pdf)
+5. [Bio-inspired robotic fish, JMSE 10(6):773](https://www.mdpi.com/2077-1312/10/6/773)
+6. [Orca4](https://github.com/clydemcqueen/orca4)
+7. [Pool simulator for UUV Simulator](https://github.com/cagdasaktay/pool-simulator-uuv_sim)
+8. [ASV wave sim](https://github.com/srmainwaring/asv_wave_sim)
+
 ## License
 
 Apache License 2.0
 
 ## Acknowledgments
 
-Built with:
+Built with ROS 2 Jazzy, Gazebo Harmonic, SLAM Toolbox, Nav2 and robot_localization.
 
-- ROS2 Jazzy
-- Gazebo Harmonic
-- SLAM Toolbox
-- Nav2 Navigation Stack
-- Robot Localization
 - [VRX](https://github.com/osrf/vrx) (Apache 2.0): Gerstner-wave shaders and
   textures used by the aquarium water, originally from UUV Simulator / Rhys Mainwaring
 - [gz-sim](https://github.com/gazebosim/gz-sim) (Apache 2.0): `ShaderParam` system,
