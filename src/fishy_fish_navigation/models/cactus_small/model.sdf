@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!-- cactus_small: Quaternius Cactus_4 (CC0), 0.28 m tall, 0.22 m across (scale 0.2042).
+     The OBJ is Y-up, so the visual is rolled 90 deg; model origin = centre of the base.
+     Hard decor: default visibility flags (mapped by the LiDAR), cylinder collision r 0.050 m. -->
+<sdf version="1.8">
+  <model name="cactus_small">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <pose>0 0 0.1400 0 0 0</pose>
+        <geometry><cylinder><radius>0.050</radius><length>0.280</length></cylinder></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>-0.0004 0.0048 -0.0005 1.5708 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/Cactus_4.obj</uri>
+            <scale>0.2042 0.2042 0.2042</scale>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
