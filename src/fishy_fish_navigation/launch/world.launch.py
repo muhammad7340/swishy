@@ -1,7 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import AppendEnvironmentVariable, DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import  LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 
@@ -26,6 +26,12 @@ def generate_launch_description():
         )
 
 
+    # Let Gazebo resolve model://aquarium_water (and other package models)
+    models_path = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH',
+        os.path.join(pkg_fishy_fish_navigation, 'models')
+    )
+
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py'),
@@ -42,6 +48,7 @@ def generate_launch_description():
     launchDescriptionObject = LaunchDescription()
 
     launchDescriptionObject.add_action(world_arg)
+    launchDescriptionObject.add_action(models_path)
     launchDescriptionObject.add_action(gazebo_launch)
 
     return launchDescriptionObject

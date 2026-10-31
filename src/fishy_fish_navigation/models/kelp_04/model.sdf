@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!-- Kelp 04: 0.64 m tall after scaling (mesh 2.09 m, scale 0.55 0.55 0.305).
+     Soft decor: no collision, visibility_flags 8 keeps it out of the gpu_lidar
+     (its visibility_mask excludes 0x8) while the camera and GUI still see it.
+
+     Swaying: gz-sim's ShaderParam draws the visual with the KelpSway shaders
+     in kelp_01/materials/programs. That material is one-sided, so the mesh is
+     Kelp04_sway.obj, which holds every triangle twice, once per face
+     (scripts/make_kelp_sway_meshes.py). swayAmp is in mesh units: 0.05 m at
+     the tip after the 0.55 horizontal scale. -->
+<sdf version="1.8">
+  <model name="kelp_04">
+    <static>true</static>
+    <link name="link">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>meshes/Kelp04_sway.obj</uri>
+            <scale>0.55 0.55 0.305</scale>
+          </mesh>
+        </geometry>
+        <cast_shadows>true</cast_shadows>
+        <visibility_flags>8</visibility_flags>
+        <plugin filename="gz-sim-shader-param-system"
+                name="gz::sim::systems::ShaderParam">
+          <shader language="glsl">
+            <vertex>model://kelp_01/materials/programs/KelpSway_vs_330.glsl</vertex>
+            <fragment>model://kelp_01/materials/programs/KelpSway_fs_330.glsl</fragment>
+          </shader>
+
+          <!-- filled in by Ogre itself: no <value> -->
+          <param><shader>vertex</shader><name>worldviewproj_matrix</name></param>
+          <param><shader>vertex</shader><name>world_matrix</name></param>
+          <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
+          <param><shader>vertex</shader><name>swayAmp</name><type>float</type><value>0.091</value></param>
+          <param><shader>vertex</shader><name>swayFreq</name><type>float</type><value>0.85</value></param>
+          <param><shader>vertex</shader><name>plantHeight</name><type>float</type><value>2.094</value></param>
+
+          <param><shader>fragment</shader><name>albedoMap</name><type>texture</type><value>model://kelp_01/materials/textures/Kelp_Albedo.png</value></param>
+          <param><shader>fragment</shader><name>lightDir</name><type>float_array</type><value>0.3 -0.4 0.87</value></param>
+          <param><shader>fragment</shader><name>ambient</name><type>float</type><value>0.45</value></param>
+        </plugin>
+      </visual>
+    </link>
+  </model>
+</sdf>

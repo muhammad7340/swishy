@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!-- driftwood: Quaternius WoodLog_Moss (CC0), 0.10 m tall, 0.43 m across (scale 0.1498).
+     The OBJ is Y-up, so the visual is rolled 90 deg; model origin = centre of the base.
+     Hard decor: default visibility flags (mapped by the LiDAR), box collision 0.13 x 0.40 m.
+     Recoloured in the .mtl (Wood) to stay out of the color detector's ranges. -->
+<sdf version="1.8">
+  <model name="driftwood">
+    <static>true</static>
+    <link name="link">
+      <collision name="collision">
+        <pose>0 0 0.0516 0 0 0</pose>
+        <geometry><box><size>0.134 0.400 0.103</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0.0032 -0.0335 -0.0048 1.5708 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>meshes/WoodLog_Moss.obj</uri>
+            <scale>0.1498 0.1498 0.1498</scale>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
