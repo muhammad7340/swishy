@@ -603,6 +603,19 @@ def define_waypoints(self):
   - `config/slam_toolbox_mapping.yaml` (SLAM)
 - **Usage**: Complete autonomous navigation with real-time mapping
 
+### 6. `navigation_with_map.launch.py`
+
+- **Purpose**: Launches the navigation stack on the saved map
+- **Arguments**: same as `navigation_with_slam.launch.py`
+- **Launches**:
+  1. RViz2 (with navigation config)
+  2. SLAM Toolbox (localization mode, loading `maps/serialized`; the robot starts at the map origin)
+  3. Nav2 navigation stack
+- **Configuration**:
+  - `config/navigation.yaml` (Nav2)
+  - `config/slam_toolbox_localization.yaml` (SLAM)
+- **Usage**: Navigation and showcase missions without re-mapping; `scripts/swishy.sh --map` uses it
+
 ## Configuration Files
 
 ### `config/ekf.yaml`
@@ -789,6 +802,7 @@ src/
 │   ├── launch/                    # Launch files
 │   │   ├── localization_slam_toolbox.launch.py
 │   │   ├── mapping.launch.py
+│   │   ├── navigation_with_map.launch.py
 │   │   ├── navigation_with_slam.launch.py
 │   │   ├── spawn_robot.launch.py  # Main robot launch
 │   │   └── world.launch.py       # Gazebo world launch
