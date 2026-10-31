@@ -82,19 +82,23 @@ HARD = [
     # SE corner: cactus with its arms along the corner diagonal + a pebble
     ("cactus_small", 1.795, -1.795, -0.785, 0.0, 0.07),
     ("ocean_rock_06", 1.62, -1.80, 0.4, 0.0, None),
-    # focal point
-    ("rock_moss", -0.62, 0.66, 0.5, 0.0, None),
-    ("cactus_tall", -0.45, 0.76, 0.3, 0.0, None),
-    ("ocean_rock_03", -0.47, 0.50, 1.1, 0.0, None),
+    # focal point: the tall cactus (arms along the NW-SE diagonal) with a
+    # pebble at its SW foot, clear of the arms
+    ("cactus_tall", -0.30, 0.60, 0.785, 0.0, None),
+    ("ocean_rock_03", -0.40, 0.50, 1.1, 0.0, None),
 ]
-# The focal cluster is one navigation obstacle around its centre.
-FOCAL = (-0.55, 0.65, 0.30)
+# The focal cluster is one navigation obstacle around its centre. Radius
+# 0.22 keeps a robot-wide gap between it and the box at (-1.3, 0.85): a
+# wider cluster here walls the NW patrol corner off from the south half
+# (box, cluster, the tank's own piece at (0.15, 0.95) and the cylinder
+# inflate into one barrier) and Nav2 fails the NW -> SW patrol leg.
+FOCAL = (-0.30, 0.60, 0.22)
 
 SOFT = [
     # ring around the focal point
-    ("grass_patch", -0.85, 0.52, 0.4),
-    ("plant_bush", -0.40, 0.36, 2.0),
-    ("grass_patch_2", -0.80, 0.86, 4.0),
+    ("grass_patch", -0.58, 0.72, 0.4),
+    ("plant_bush", -0.02, 0.48, 2.0),
+    ("grass_patch_2", -0.22, 0.88, 4.0),
     # floor carpet
     ("grass_patch", -1.20, -1.20, 0.0),
     ("plant_bush", -0.30, -1.60, 1.1),
