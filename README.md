@@ -279,6 +279,12 @@ Please refer to [src/README.md](src/README.md).
 
 6. [github.com/clydemcqueen/orca4](https://github.com/clydemcqueen/orca4)
 
+7. [github.com/cagdasaktay/pool-simulator-uuv_sim](https://github.com/cagdasaktay/pool-simulator-uuv_sim)
+
+8. [github.com/AlePuglisi/MBARI-vehicles-sim-ros2](https://github.com/AlePuglisi/MBARI-vehicles-sim-ros2)
+
+9. [github.com/srmainwaring/asv_wave_sim](https://github.com/srmainwaring/asv_wave_sim)
+
 ## Packages
 
 ### `fishy_fish_navigation`
