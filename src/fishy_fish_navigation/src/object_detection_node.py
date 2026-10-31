@@ -11,7 +11,7 @@ class ObjectDetectionNode(Node):
         super().__init__('object_detection_node')
         self.subscription = self.create_subscription(
             Image,
-            '/camera/image',
+            '/left_eye/image',
             self.image_callback,
             10)
         self.bridge = CvBridge()

@@ -203,7 +203,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /camera/image/compressed
+        Value: /left_eye/image/compressed
       Value: false
       Visibility:
         Grid: true
