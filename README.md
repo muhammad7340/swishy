@@ -64,6 +64,9 @@ swishy/
 - **Localization**: Accurate pose estimation using pre-built maps
 - **Autonomous Navigation**: Nav2-based path planning and execution
 - **Gazebo Simulation**: Full physics simulation with sensors (LiDAR, IMU, Camera)
+- **Aquarium Water**: GPU-shaded rippling surface, underwater fog, caustics, light
+  shafts and rising bubbles, all visual-only and hidden from the LiDAR and camera
+  (see below)
 - **Modular Design**: Separate packages for core functionality and utilities
 
 ## Quick Start
@@ -246,6 +249,35 @@ Robot localizing itself in a pre-built map. The pose estimate is shown with unce
 
 Autonomous navigation in action. Nav2 plans paths to goals while avoiding obstacles, using both global and local costmaps for safe navigation.
 
+### Aquarium Water
+
+The tank is filled with visual-only water from `models/aquarium_water/`:
+
+- **Rippling surface**: three gentle Gerstner waves (wavelengths 1.5 / 0.9 / 0.55 m)
+  drawn on the GPU. A flipped copy (`surface_underside`) shows the surface from
+  below. Tune `amplitude`, `omega` and `alpha` (opacity) in `model.sdf`.
+- **Underwater fog**: Gazebo's renderer has no fog, so 40 nested shells are
+  re-centred on the camera by a vertex shader. An object `d` metres away is
+  tinted by `1 - exp(-density * d)`; only drawn while the camera is under water.
+- **Caustics**: an animated web of refracted light on the sand, drawn on a copy
+  of the sand quad lifted 4 mm.
+- **Light shafts**: soft, swaying strips from the surface to the sand (underwater only).
+- **Bubbles**: three columns of bubbles animated entirely in a vertex shader.
+- **Water volume**: a transparent tinted box from the surface (z = 1.6 m) to the sand.
+- **Sensor-safe**: every water visual has `visibility_flags` 2, and the robot's
+  `gpu_lidar` and camera use `visibility_mask` 1073741821 (all bits except 0x2).
+  `/scan`, the SLAM map and the color detector don't see the water, so Nav2 and
+  SLAM behave exactly as before. There are no collisions, so physics is unchanged.
+
+The shader visuals use `swishy::WaterShaderParam` from the `swishy_water` package:
+gz-sim's `ShaderParam` with depth writes switched off. The stock system leaves
+depth writes on, so each transparent effect would hide everything behind it.
+Sourcing the workspace puts the plugin on `GZ_SIM_SYSTEM_PLUGIN_PATH`.
+
+Regenerate the meshes after changing the tank size with
+`python3 scripts/make_water_grid.py [out.obj] [size_x] [size_y] [cells_per_m]` (surface) and
+`python3 scripts/make_aquarium_effects.py` (fog shells, light shafts, bubbles, caustics).
+
 ## Documentation
 
 For comprehensive documentation including:
@@ -312,3 +344,7 @@ Built with:
 - SLAM Toolbox
 - Nav2 Navigation Stack
 - Robot Localization
+- [VRX](https://github.com/osrf/vrx) (Apache 2.0): Gerstner-wave shaders and
+  textures used by the aquarium water, originally from UUV Simulator / Rhys Mainwaring
+- [gz-sim](https://github.com/gazebosim/gz-sim) (Apache 2.0): `ShaderParam` system,
+  adapted as `swishy::WaterShaderParam` in `src/swishy_water`

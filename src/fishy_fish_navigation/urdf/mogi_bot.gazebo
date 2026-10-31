@@ -128,6 +128,9 @@
           <mean>0.0</mean>
           <stddev>0.007</stddev>
         </noise>
+        <!-- all bits except 0x2 (hides the aquarium water), so the
+             color detector's thresholds stay valid -->
+        <visibility_mask>1073741821</visibility_mask>
         <optical_frame_id>camera_link_optical</optical_frame_id>
         <camera_info_topic>camera/camera_info</camera_info_topic>
       </camera>
@@ -220,6 +223,9 @@
             <mean>0.0</mean>
             <stddev>0.01</stddev>
         </noise>
+        <!-- all bits except 0x2, so the aquarium water does not show up as
+             walls in /scan or the SLAM map -->
+        <visibility_mask>1073741821</visibility_mask>
       </lidar>
       <always_on>1</always_on>
       <visualize>false</visualize>
