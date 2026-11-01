@@ -11,7 +11,8 @@ Usage: scripts/swishy.sh [--slam | --map] [--mode MODE] [--loop] [--no-teleop] [
        scripts/swishy.sh --stop
 
 Opens one Terminator window with a pane per part of the stack; each pane
-prints the manual command it runs.
+prints the manual command it runs. Gazebo runs in its own partition
+(GZ_PARTITION, default "swishy"), so another simulation can run alongside.
 
   --slam        Build a new map while navigating (SLAM Toolbox mapping + Nav2). Default.
   --map         Navigate on the saved map in maps/ (SLAM Toolbox localization + Nav2).
@@ -87,6 +88,11 @@ if [[ -n "$(swishy_pids)" ]]; then
   exit 1
 fi
 
+# Its own Gazebo partition (and the caller's ROS domain), so Swishy runs
+# beside another simulation without either seeing the other's topics.
+gz_partition="${GZ_PARTITION:-swishy}"
+ros_domain="${ROS_DOMAIN_ID:-0}"
+
 run_dir="$(mktemp -d "${TMPDIR:-/tmp}/swishy.XXXXXX")"
 
 # pane NAME WAIT_FOR COMMAND: writes a script that sources ROS, waits for the
@@ -100,6 +106,8 @@ source "${ROS_SETUP}"
 source "${WORKSPACE}/install/setup.bash"
 cd "${WORKSPACE}"
 export DISPLAY="\${DISPLAY:-:0}"
+export GZ_PARTITION="${gz_partition}"
+export ROS_DOMAIN_ID="${ros_domain}"
 export SWISHY_LAUNCHER=1
 case "${wait_for}" in
   sim)  echo "Waiting for Gazebo..."
@@ -198,7 +206,8 @@ cat > "${run_dir}/terminator.conf" <<EOF
       command = ${run_dir}/eyes.sh
 EOF
 
-echo "Starting Swishy (${nav}, mode ${mode}). Stop with: scripts/swishy.sh --stop"
+echo "Starting Swishy (${nav}, mode ${mode}, GZ_PARTITION=${gz_partition}, ROS_DOMAIN_ID=${ros_domain})."
+echo "Stop with: scripts/swishy.sh --stop"
 # -u: without it a running Terminator takes over the request over D-Bus and
 # ignores this config, so no window opens.
 terminator -u -g "${run_dir}/terminator.conf" -l swishy >/dev/null 2>&1 &
