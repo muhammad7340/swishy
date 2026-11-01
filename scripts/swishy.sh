@@ -7,7 +7,7 @@ ROS_SETUP="/opt/ros/jazzy/setup.bash"
 
 usage() {
   cat <<'EOF'
-Usage: scripts/swishy.sh [--slam | --map] [--mode MODE] [--loop] [--no-teleop] [--no-eyes]
+Usage: scripts/swishy.sh [--slam | --map] [--glass] [--mode MODE] [--loop] [--no-teleop] [--no-eyes]
        scripts/swishy.sh --stop
 
 Opens one Terminator window with a pane per part of the stack; each pane
@@ -16,6 +16,7 @@ prints the manual command it runs. Gazebo runs in its own partition
 
   --slam        Build a new map while navigating (SLAM Toolbox mapping + Nav2). Default.
   --map         Navigate on the saved map in maps/ (SLAM Toolbox localization + Nav2).
+  --glass       Glass-walled tank (fish_world_glass.sdf), to watch from outside.
   --mode MODE   Start a showcase mode once Nav2 is up:
                 showcase | patrol | dance | explorer | interactive | none (default)
   --loop        Repeat the showcase mode.
@@ -38,6 +39,7 @@ swishy_pids() {
 }
 
 nav="slam"
+world="fish_world.sdf"
 mode="none"
 loop="false"
 teleop=true
@@ -47,6 +49,7 @@ while (($#)); do
   case "$1" in
     --slam) nav="slam" ;;
     --map) nav="map" ;;
+    --glass) world="fish_world_glass.sdf" ;;
     --mode) shift; mode="${1:-}" ;;
     --loop) loop="true" ;;
     --no-teleop) teleop=false ;;
@@ -123,7 +126,7 @@ EOF
   chmod +x "${run_dir}/${name}.sh"
 }
 
-pane gazebo none "ros2 launch fishy_fish_navigation spawn_robot.launch.py"
+pane gazebo none "ros2 launch fishy_fish_navigation spawn_robot.launch.py world:=${world}"
 pane nav sim "ros2 launch fishy_fish_navigation navigation_with_${nav}.launch.py"
 if [[ "${mode}" == "none" ]]; then
   pane mode nav2 "echo Pick a mode: ros2 launch fishy_fish_navigation_py showcase_navigation.launch.py mode:=patrol"

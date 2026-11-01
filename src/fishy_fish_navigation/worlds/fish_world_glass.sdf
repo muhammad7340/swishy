@@ -1,0 +1,782 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+    <!-- Glass-tank variant of fish_world.sdf: three thin glass walls, a
+         coloured back wall and a black frame, so the tank can be watched
+         from outside. Same world name, robot,
+         decor and map as fish_world.sdf; select it with
+         spawn_robot.launch.py world:=fish_world_glass.sdf. -->
+    <world name="fish_world">
+
+        <!-- Keep a deterministic project GUI instead of loading ~/.gz state. -->
+        <gui fullscreen="0">
+          <plugin filename="MinimalScene" name="3D View">
+            <gz-gui>
+              <title>3D View</title>
+              <property type="bool" key="showTitleBar">false</property>
+              <property type="string" key="state">docked</property>
+            </gz-gui>
+            <engine>ogre2</engine>
+            <scene>scene</scene>
+            <ambient_light>0.4 0.4 0.4</ambient_light>
+            <background_color>0.8 0.8 0.8</background_color>
+            <camera_pose>-6 0 6 0 0.5 0</camera_pose>
+          </plugin>
+
+          <plugin filename="GzSceneManager" name="Scene Manager">
+            <gz-gui>
+              <property key="state" type="string">floating</property>
+              <property key="width" type="double">5</property>
+              <property key="height" type="double">5</property>
+              <property key="showTitleBar" type="bool">false</property>
+            </gz-gui>
+          </plugin>
+          <plugin filename="InteractiveViewControl" name="Interactive view control">
+            <gz-gui>
+              <property key="state" type="string">floating</property>
+              <property key="width" type="double">5</property>
+              <property key="height" type="double">5</property>
+              <property key="showTitleBar" type="bool">false</property>
+            </gz-gui>
+          </plugin>
+          <plugin filename="CameraTracking" name="Camera Tracking">
+            <gz-gui>
+              <property key="state" type="string">floating</property>
+              <property key="width" type="double">5</property>
+              <property key="height" type="double">5</property>
+              <property key="showTitleBar" type="bool">false</property>
+            </gz-gui>
+          </plugin>
+          <plugin filename="MarkerManager" name="Marker manager">
+            <gz-gui>
+              <property key="state" type="string">floating</property>
+              <property key="width" type="double">5</property>
+              <property key="height" type="double">5</property>
+              <property key="showTitleBar" type="bool">false</property>
+            </gz-gui>
+          </plugin>
+          <plugin filename="SelectEntities" name="Select Entities">
+            <gz-gui>
+              <property key="state" type="string">floating</property>
+              <property key="width" type="double">5</property>
+              <property key="height" type="double">5</property>
+              <property key="showTitleBar" type="bool">false</property>
+            </gz-gui>
+          </plugin>
+
+          <plugin filename="WorldControl" name="World control">
+            <gz-gui>
+              <title>World control</title>
+              <property type="bool" key="showTitleBar">false</property>
+              <property type="bool" key="resizable">false</property>
+              <property type="double" key="height">72</property>
+              <property type="double" key="z">1</property>
+              <property type="string" key="state">floating</property>
+              <anchors target="3D View">
+                <line own="left" target="left"/>
+                <line own="bottom" target="bottom"/>
+              </anchors>
+            </gz-gui>
+            <play_pause>true</play_pause>
+            <step>true</step>
+            <start_paused>false</start_paused>
+            <use_event>true</use_event>
+          </plugin>
+
+          <plugin filename="WorldStats" name="World stats">
+            <gz-gui>
+              <title>World stats</title>
+              <property type="bool" key="showTitleBar">false</property>
+              <property type="bool" key="resizable">false</property>
+              <property type="double" key="height">110</property>
+              <property type="double" key="width">290</property>
+              <property type="double" key="z">1</property>
+              <property type="string" key="state">floating</property>
+              <anchors target="3D View">
+                <line own="right" target="right"/>
+                <line own="bottom" target="bottom"/>
+              </anchors>
+            </gz-gui>
+            <sim_time>true</sim_time>
+            <real_time>true</real_time>
+            <real_time_factor>true</real_time_factor>
+            <iterations>true</iterations>
+          </plugin>
+        </gui>
+
+         <!-- physics settings and plugins  -->
+        <physics name='20ms' type='ode'>
+          <max_step_size>0.02</max_step_size>
+          <real_time_factor>1</real_time_factor>
+          <real_time_update_rate>50</real_time_update_rate>
+        </physics>
+        <plugin name='gz::sim::systems::Physics' filename='gz-sim-physics-system'/>
+        <plugin name='gz::sim::systems::UserCommands' filename='gz-sim-user-commands-system'/>
+        <plugin name='gz::sim::systems::SceneBroadcaster' filename='gz-sim-scene-broadcaster-system'/>
+        <plugin name='gz::sim::systems::Contact' filename='gz-sim-contact-system'/>
+        <plugin name='gz::sim::systems::Sensors' filename='gz-sim-sensors-system'>
+          <render_engine>ogre2</render_engine>
+        </plugin>
+        <plugin name='gz::sim::systems::Imu' filename='gz-sim-imu-system'/>
+        <plugin
+          filename="gz-sim-navsat-system"
+          name="gz::sim::systems::NavSat">
+        </plugin>
+        <gravity>0 0 -9.8000000000000007</gravity>
+ 
+        <plugin
+          filename="gz-sim-buoyancy-system"
+          name="gz::sim::systems::Buoyancy">
+          <uniform_fluid_density>92.5</uniform_fluid_density>
+        </plugin> 
+
+         <!-- lighting settings -->
+        <light type="directional" name="sun">
+            <cast_shadows>true</cast_shadows>
+            <pose>0 0 10 0 0 0</pose>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <attenuation>
+                <range>1000</range>
+                <constant>0.9</constant>
+                <linear>0.01</linear>
+                <quadratic>0.001</quadratic>
+            </attenuation>
+            <direction>-0.5 0.1 -0.9</direction>
+        </light>
+
+        <!-- Aquarium spot lights, 0.8 m above the water (z = 2.4).
+             kelp_spot casts no shadows: with all three lights casting
+             shadows and the GUI rendering, the simulation stalls ~160 ms
+             about once a second on integrated graphics (RTF dips to ~0.2),
+             and the sim-time-driven water waves visibly jitter. With
+             shadows from the sun and focal_spot only, RTF stays at 0.99. -->
+        <light type="spot" name="focal_spot">
+            <visualize>false</visualize>
+            <pose>-0.55 0.65 3.2 0 0 0</pose>
+            <cast_shadows>true</cast_shadows>
+            <diffuse>0.85 0.95 1.0 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+            <direction>0 0 -1</direction>
+            <attenuation>
+                <range>4</range>
+                <constant>0.6</constant>
+                <linear>0.1</linear>
+                <quadratic>0.02</quadratic>
+            </attenuation>
+            <spot>
+                <inner_angle>0.35</inner_angle>
+                <outer_angle>0.7</outer_angle>
+                <falloff>1.0</falloff>
+            </spot>
+        </light>
+
+        <light type="spot" name="kelp_spot">
+            <visualize>false</visualize>
+            <pose>0 1.2 3.2 0 0 0</pose>
+            <cast_shadows>false</cast_shadows>
+            <diffuse>0.7 0.85 1.0 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+            <direction>0 0.35 -1</direction>
+            <attenuation>
+                <range>4</range>
+                <constant>0.6</constant>
+                <linear>0.1</linear>
+                <quadratic>0.02</quadratic>
+            </attenuation>
+            <spot>
+                <inner_angle>0.6</inner_angle>
+                <outer_angle>1.1</outer_angle>
+                <falloff>1.0</falloff>
+            </spot>
+        </light>
+
+        <!-- ground plane model, raised to z = 0.7 m so only the lower third
+             of the glass tank is base and the rest is water (the tank, robot
+             and decor keep their heights) -->
+        <model name="ground_plane">
+            <pose>0 0 0.7 0 0 0</pose>
+            <static>true</static>
+            <link name="link">
+                <collision name="collision">
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    </plane>
+                </geometry>
+                </collision>
+                <visual name="visual">
+                <geometry>
+                    <plane>
+                    <normal>0 0 1</normal>
+                    <size>100 100</size>
+                    </plane>
+                </geometry>
+                <material>
+                    <ambient>0.8 0.8 0.8 1</ambient>
+                    <diffuse>0.8 0.8 0.8 1</diffuse>
+                    <specular>0.8 0.8 0.8 1</specular>
+                </material>
+                </visual>
+            </link>
+            <static>true</static>
+        </model>
+
+
+     <!-- fish tank model designed in blender -->
+    <model name="test">
+    <link name="testlink">
+      <visual name="seashell">
+        <geometry>
+          <mesh>
+            <uri>../models/model.dae</uri>
+            <submesh><name>seashell</name></submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>0.0 0.0 0.0 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>seashell.jpg</albedo_map>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- The sand mound only. In fish_world.sdf this visual loads the full
+           mesh, which also paints the floor with sand but draws a
+           sand-textured copy of the walls that would show through the glass
+           as brown, cardboard-like walls. The floor gets its sand below. -->
+      <visual name="Icosphere">
+        <geometry>
+          <mesh>
+            <uri>../models/model.dae</uri>
+            <submesh><name>Icosphere</name></submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>0.0 0.0 0.0 1.0</specular>
+          <pbr>
+            <metal>
+              <albedo_map>Sand.jpg</albedo_map>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+
+      <!-- Glass tank. The tank mesh's walls are 14 cm thick slabs: through
+           glass their inner and outer faces showed as doubled walls, so the
+           mesh is not drawn here. Instead: 1 cm panes whose inner faces sit
+           exactly where the mesh's did (x = +-1.865, y = -1.865), so /scan
+           and the saved map are unchanged; an opaque coloured back wall
+           (inner face y = 1.77, as before); and a frame in the back wall's
+           blue. The glass runs from the raised ground (0.7 m) to just above
+           the water (2.4 m; aquarium_water_deep, surface at 2.3 m, about
+           1.35 m above the sand, so the tank has aquarium proportions). The floor in the tank model rises 0.18 m from
+           west to east; the level base trim hides its edge, so the tank
+           itself reads level. -->
+      <visual name="glass_front">
+        <pose>0 -1.87 1.55 0 0 0</pose>
+        <geometry><box><size>3.75 0.01 1.7</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <transparency>0.85</transparency>
+        <material>
+          <ambient>0.7 0.9 0.95 1</ambient>
+          <diffuse>0.7 0.9 0.95 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+        </material>
+      </visual>
+      <visual name="glass_east">
+        <pose>1.87 -0.05 1.55 0 0 0</pose>
+        <geometry><box><size>0.01 3.65 1.7</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <transparency>0.85</transparency>
+        <material>
+          <ambient>0.7 0.9 0.95 1</ambient>
+          <diffuse>0.7 0.9 0.95 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+        </material>
+      </visual>
+      <visual name="glass_west">
+        <pose>-1.87 -0.05 1.55 0 0 0</pose>
+        <geometry><box><size>0.01 3.65 1.7</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <transparency>0.85</transparency>
+        <material>
+          <ambient>0.7 0.9 0.95 1</ambient>
+          <diffuse>0.7 0.9 0.95 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+        </material>
+      </visual>
+      <visual name="back_wall">
+        <pose>0 1.80 1.55 0 0 0</pose>
+        <geometry><box><size>3.75 0.06 1.7</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_base_front">
+        <pose>0 -1.935 0.86 0 0 0</pose>
+        <geometry><box><size>3.99 0.12 0.32</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_base_east">
+        <pose>1.935 -0.05 0.86 0 0 0</pose>
+        <geometry><box><size>0.12 3.85 0.32</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_base_west">
+        <pose>-1.935 -0.05 0.86 0 0 0</pose>
+        <geometry><box><size>0.12 3.85 0.32</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_rim_front">
+        <pose>0 -1.905 2.4 0 0 0</pose>
+        <geometry><box><size>3.87 0.06 0.04</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_rim_back">
+        <pose>0 1.86 2.4 0 0 0</pose>
+        <geometry><box><size>3.87 0.06 0.04</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_rim_east">
+        <pose>1.905 -0.02 2.4 0 0 0</pose>
+        <geometry><box><size>0.06 3.82 0.04</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_rim_west">
+        <pose>-1.905 -0.02 2.4 0 0 0</pose>
+        <geometry><box><size>0.06 3.82 0.04</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_post_es">
+        <pose>1.9 -1.9 1.7 0 0 0</pose>
+        <geometry><box><size>0.04 0.04 1.36</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_post_en">
+        <pose>1.9 1.86 1.7 0 0 0</pose>
+        <geometry><box><size>0.04 0.04 1.36</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_post_ws">
+        <pose>-1.9 -1.9 1.7 0 0 0</pose>
+        <geometry><box><size>0.04 0.04 1.36</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+      <visual name="frame_post_wn">
+        <pose>-1.9 1.86 1.7 0 0 0</pose>
+        <geometry><box><size>0.04 0.04 1.36</size></box></geometry>
+        <cast_shadows>false</cast_shadows>
+        <material>
+          <ambient>0.5 0.8 1 1</ambient>
+          <diffuse>0.5 0.8 1 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- The tank floor, light sand as in fish_world.sdf (Sand.jpg renders
+           dark grey here). -->
+      <visual name="Plane">
+        <geometry>
+          <mesh>
+            <uri>../models/model.dae</uri>
+            <submesh><name>Plane</name></submesh>
+          </mesh>
+        </geometry>
+        <material>
+          <ambient>0.6 0.3 0.1 1</ambient>
+          <diffuse>0.6 0.3 0.1 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Simple boundaries are much cheaper and more stable than collision
+           detection against the full 235k-triangle decorative mesh. -->
+      <collision name="north_wall">
+        <pose>0 2.05 1 0 0 0</pose>
+        <geometry><box><size>4.2 0.1 2</size></box></geometry>
+      </collision>
+      <collision name="south_wall">
+        <pose>0 -2.05 1 0 0 0</pose>
+        <geometry><box><size>4.2 0.1 2</size></box></geometry>
+      </collision>
+      <collision name="east_wall">
+        <pose>2.05 0 1 0 0 0</pose>
+        <geometry><box><size>0.1 4.2 2</size></box></geometry>
+      </collision>
+      <collision name="west_wall">
+        <pose>-2.05 0 1 0 0 0</pose>
+        <geometry><box><size>0.1 4.2 2</size></box></geometry>
+      </collision>
+    </link>
+    <static>true</static>
+  </model>
+
+<!-- Aquarium water: visual only (no collision), hidden from lidar/camera
+     via visibility flag 0x4. Model origin is the water surface. -->
+<include>
+  <uri>model://aquarium_water_deep</uri>
+  <pose>0 -0.05 2.3 0 0 0</pose>
+</include>
+
+<!-- BEGIN aquarium decor (generated by scripts/layout_decor.py) -->
+<!-- Back glass backdrop (soft decor) -->
+<include>
+  <uri>model://backdrop</uri>
+  <name>decor_backdrop</name>
+  <pose>0.000 1.765 0.800 0 0 0.000</pose>
+</include>
+<!-- Kelp: soft decor, hidden from the LiDAR (visibility_flags 8) -->
+<include>
+  <uri>model://kelp_04</uri>
+  <name>decor_kelp_04_1</name>
+  <pose>-1.700 1.580 0.863 0 0 0.300</pose>
+</include>
+<include>
+  <uri>model://kelp_03</uri>
+  <name>decor_kelp_03_1</name>
+  <pose>-1.250 1.580 0.884 0 0 1.900</pose>
+</include>
+<include>
+  <uri>model://kelp_02</uri>
+  <name>decor_kelp_02_1</name>
+  <pose>-0.800 1.580 0.906 0 0 4.100</pose>
+</include>
+<include>
+  <uri>model://kelp_03</uri>
+  <name>decor_kelp_03_2</name>
+  <pose>-0.300 1.580 0.929 0 0 2.600</pose>
+</include>
+<include>
+  <uri>model://kelp_02</uri>
+  <name>decor_kelp_02_2</name>
+  <pose>0.200 1.580 0.943 0 0 5.200</pose>
+</include>
+<include>
+  <uri>model://kelp_01</uri>
+  <name>decor_kelp_01_1</name>
+  <pose>0.650 1.580 0.974 0 0 0.900</pose>
+</include>
+<include>
+  <uri>model://kelp_01</uri>
+  <name>decor_kelp_01_2</name>
+  <pose>1.250 1.580 0.983 0 0 3.300</pose>
+</include>
+<include>
+  <uri>model://kelp_04</uri>
+  <name>decor_kelp_04_2</name>
+  <pose>-1.700 -1.000 0.841 0 0 2.200</pose>
+</include>
+<include>
+  <uri>model://kelp_02</uri>
+  <name>decor_kelp_02_3</name>
+  <pose>-1.700 -0.550 0.845 0 0 0.700</pose>
+</include>
+<include>
+  <uri>model://kelp_01</uri>
+  <name>decor_kelp_01_3</name>
+  <pose>-1.700 0.400 0.853 0 0 3.900</pose>
+</include>
+<include>
+  <uri>model://kelp_01</uri>
+  <name>decor_kelp_01_4</name>
+  <pose>1.700 -1.100 0.981 0 0 1.400</pose>
+</include>
+<include>
+  <uri>model://kelp_01</uri>
+  <name>decor_kelp_01_5</name>
+  <pose>1.700 -0.400 0.982 0 0 4.600</pose>
+</include>
+<!-- Hard decor: corners and the focal point; mapped by the LiDAR -->
+<include>
+  <uri>model://cactus_small</uri>
+  <name>decor_cactus_small_1</name>
+  <pose>1.795 1.700 1.030 0 0 0.785</pose>
+</include>
+<include>
+  <uri>model://driftwood</uri>
+  <name>decor_driftwood_1</name>
+  <pose>-1.665 1.700 0.866 0 0 1.571</pose>
+</include>
+<include>
+  <uri>model://ocean_rock_05</uri>
+  <name>decor_ocean_rock_05_1</name>
+  <pose>-1.790 1.480 0.858 0 0 1.200</pose>
+</include>
+<include>
+  <uri>model://ocean_rock_01</uri>
+  <name>decor_ocean_rock_01_1</name>
+  <pose>-1.765 -1.765 0.831 0 0 0.600</pose>
+</include>
+<include>
+  <uri>model://ocean_rock_05</uri>
+  <name>decor_ocean_rock_05_2</name>
+  <pose>-1.600 -1.800 0.839 0 0 2.500</pose>
+</include>
+<include>
+  <uri>model://cactus_small</uri>
+  <name>decor_cactus_small_2</name>
+  <pose>1.795 -1.795 1.000 0 0 -0.785</pose>
+</include>
+<include>
+  <uri>model://ocean_rock_06</uri>
+  <name>decor_ocean_rock_06_1</name>
+  <pose>1.620 -1.800 0.991 0 0 0.400</pose>
+</include>
+<include>
+  <uri>model://cactus_tall</uri>
+  <name>decor_cactus_tall_1</name>
+  <pose>-0.300 0.600 0.921 0 0 0.785</pose>
+</include>
+<include>
+  <uri>model://ocean_rock_03</uri>
+  <name>decor_ocean_rock_03_1</name>
+  <pose>-0.400 0.500 0.915 0 0 1.100</pose>
+</include>
+<!-- Soft decor on the sand: grass, ferns, shells, starfish -->
+<include>
+  <uri>model://grass_patch</uri>
+  <name>decor_grass_patch_1</name>
+  <pose>-0.580 0.720 0.899 0 0 0.400</pose>
+</include>
+<include>
+  <uri>model://plant_bush</uri>
+  <name>decor_plant_bush_1</name>
+  <pose>-0.020 0.480 0.923 0 0 2.000</pose>
+</include>
+<include>
+  <uri>model://grass_patch_2</uri>
+  <name>decor_grass_patch_2_1</name>
+  <pose>-0.220 0.880 0.917 0 0 4.000</pose>
+</include>
+<include>
+  <uri>model://grass_patch</uri>
+  <name>decor_grass_patch_2</name>
+  <pose>-1.200 -1.200 0.853 0 0 0.000</pose>
+</include>
+<include>
+  <uri>model://plant_bush</uri>
+  <name>decor_plant_bush_2</name>
+  <pose>-0.300 -1.600 0.892 0 0 1.100</pose>
+</include>
+<include>
+  <uri>model://grass_patch_2</uri>
+  <name>decor_grass_patch_2_2</name>
+  <pose>0.950 -1.450 0.953 0 0 2.300</pose>
+</include>
+<include>
+  <uri>model://grass_patch</uri>
+  <name>decor_grass_patch_3</name>
+  <pose>1.300 -0.300 0.979 0 0 3.400</pose>
+</include>
+<include>
+  <uri>model://plant_bush</uri>
+  <name>decor_plant_bush_3</name>
+  <pose>-1.000 0.350 0.876 0 0 4.500</pose>
+</include>
+<include>
+  <uri>model://grass_patch_2</uri>
+  <name>decor_grass_patch_2_3</name>
+  <pose>0.200 0.300 0.932 0 0 5.600</pose>
+</include>
+<include>
+  <uri>model://grass_patch</uri>
+  <name>decor_grass_patch_4</name>
+  <pose>1.500 -1.600 0.977 0 0 0.700</pose>
+</include>
+<include>
+  <uri>model://grass_patch_2</uri>
+  <name>decor_grass_patch_2_4</name>
+  <pose>-1.600 -0.800 0.837 0 0 1.800</pose>
+</include>
+<include>
+  <uri>model://grass_patch</uri>
+  <name>decor_grass_patch_5</name>
+  <pose>1.550 1.680 1.008 0 0 2.900</pose>
+</include>
+<include>
+  <uri>model://grass_patch_2</uri>
+  <name>decor_grass_patch_2_5</name>
+  <pose>-1.720 1.500 0.851 0 0 4.000</pose>
+</include>
+<include>
+  <uri>model://plant_bush</uri>
+  <name>decor_plant_bush_4</name>
+  <pose>-1.550 -1.750 0.831 0 0 5.100</pose>
+</include>
+<include>
+  <uri>model://grass_patch</uri>
+  <name>decor_grass_patch_6</name>
+  <pose>1.780 -1.580 0.991 0 0 0.200</pose>
+</include>
+<include>
+  <uri>model://seashell_01</uri>
+  <name>decor_seashell_01_1</name>
+  <pose>-0.700 -1.780 0.884 0 0 0.500</pose>
+</include>
+<include>
+  <uri>model://seashell_02</uri>
+  <name>decor_seashell_02_1</name>
+  <pose>-0.550 -1.730 0.891 0 0 2.400</pose>
+</include>
+<include>
+  <uri>model://seashell_03</uri>
+  <name>decor_seashell_03_1</name>
+  <pose>0.950 -1.800 0.962 0 0 4.000</pose>
+</include>
+<include>
+  <uri>model://starfish</uri>
+  <name>decor_starfish_1</name>
+  <pose>-0.620 -1.640 0.889 0 0 0.400</pose>
+</include>
+<!-- Lily pads floating on the surface -->
+<include>
+  <uri>model://lilypad</uri>
+  <name>decor_lilypad_1</name>
+  <pose>-1.500 1.300 2.315 0 0 0.300</pose>
+</include>
+<include>
+  <uri>model://lilypad</uri>
+  <name>decor_lilypad_2</name>
+  <pose>-1.200 1.550 2.315 0 0 2.000</pose>
+</include>
+<include>
+  <uri>model://lilypad</uri>
+  <name>decor_lilypad_3</name>
+  <pose>1.300 -1.400 2.315 0 0 4.100</pose>
+</include>
+<include>
+  <uri>model://lilypad</uri>
+  <name>decor_lilypad_4</name>
+  <pose>1.550 -1.150 2.315 0 0 5.500</pose>
+</include>
+<!-- Ambient fish swimming around these centres (visual only) -->
+<include>
+  <uri>model://fish_carp</uri>
+  <name>decor_fish_carp_1</name>
+  <pose>0.000 -0.200 1.848 0 0 0.000</pose>
+</include>
+<include>
+  <uri>model://fish_carp</uri>
+  <name>decor_fish_carp_2</name>
+  <pose>0.300 0.200 2.097 0 0 1.200</pose>
+</include>
+<include>
+  <uri>model://fish_fusilier</uri>
+  <name>decor_fish_fusilier_1</name>
+  <pose>-0.900 -0.900 1.599 0 0 0.400</pose>
+</include>
+<include>
+  <uri>model://fish_fusilier</uri>
+  <name>decor_fish_fusilier_2</name>
+  <pose>0.900 -0.800 1.806 0 0 2.000</pose>
+</include>
+<include>
+  <uri>model://fish_fusilier</uri>
+  <name>decor_fish_fusilier_3</name>
+  <pose>0.700 0.900 1.682 0 0 0.000</pose>
+</include>
+<include>
+  <uri>model://fish_bleak</uri>
+  <name>decor_fish_bleak_1</name>
+  <pose>1.200 -1.200 1.558 0 0 0.000</pose>
+</include>
+<include>
+  <uri>model://fish_bleak</uri>
+  <name>decor_fish_bleak_2</name>
+  <pose>-1.100 -0.300 1.724 0 0 0.000</pose>
+</include>
+<include>
+  <uri>model://fish_puffer</uri>
+  <name>decor_fish_puffer_1</name>
+  <pose>0.000 -1.200 1.640 0 0 0.000</pose>
+</include>
+<include>
+  <uri>model://fish_pompano</uri>
+  <name>decor_fish_pompano_1</name>
+  <pose>0.000 1.200 1.516 0 0 0.000</pose>
+</include>
+<!-- END aquarium decor -->
+
+<!-- Cylinder Model -->
+<model name="cylinder">
+  <pose>1.0 0.8 1.1 0 0 0</pose>
+  <link name="cylinder_link">
+    <collision name="cylinder_collision">
+      <geometry>
+        <cylinder>
+          <radius>0.2</radius>
+          <length>0.3</length>
+        </cylinder>
+      </geometry>
+    </collision>
+    <visual name="cylinder_visual">
+      <geometry>
+        <cylinder>
+          <radius>0.2</radius>
+          <length>0.3</length>
+        </cylinder>
+      </geometry>
+      <material>
+        <ambient>1 0.5 0 1</ambient>
+        <diffuse>1 0.5 0 1</diffuse>
+      </material>
+    </visual>
+  </link>
+  <static>true</static>
+</model>
+
+<!-- Aquarium pump (replaces the red box, same 0.22 m obstacle circle).
+     Plinth bottom 5 mm into the sand (floor_z(-1.3, 0.85) = 0.876); the
+     bubble stream from its outlet is part of the water model. -->
+<include>
+  <uri>model://aquarium_pump</uri>
+  <name>aquarium_pump</name>
+  <pose>-1.3 0.85 0.871 0 0 0</pose>
+</include>
+    
+    </world>
+</sdf>

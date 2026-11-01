@@ -33,7 +33,7 @@
              never z-fights with the surface visuals -->
         <pose>0 0 -0.39 0 0 0</pose>
         <geometry>
-          <box><size>3.9 3.8 0.72</size></box>
+          <box><size>3.72 3.62 0.72</size></box>
         </geometry>
         <transparency>0.85</transparency>
         <cast_shadows>false</cast_shadows>
@@ -69,21 +69,22 @@
           <param><shader>vertex</shader><name>camera_position_object_space</name></param>
           <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
 
-          <!-- 3 gentle aquarium ripples, wavelengths 1.5 / 0.9 / 0.55 m.
-               omega is slowed for a calm tank; deep-water dispersion would
-               give ~6.4 / 8.3 / 10.6 rad/s for livelier water. -->
+          <!-- 3 short aquarium ripples (wavelengths 0.45 / 0.30 / 0.20 m,
+               steepness a*k ~ 0.1), not ocean swell. omega is slowed for a
+               calm tank; deep-water dispersion would give ~11.7 / 14.4 /
+               17.5 rad/s. Troughs reach 1.5 cm, inside the volume's 3 cm. -->
           <param><shader>vertex</shader><name>Nwaves</name><type>int</type><value>3</value></param>
-          <param><shader>vertex</shader><name>amplitude</name><type>float_array</type><value>0.012 0.007 0.004</value></param>
-          <param><shader>vertex</shader><name>wavenumber</name><type>float_array</type><value>4.19 6.98 11.42</value></param>
-          <param><shader>vertex</shader><name>omega</name><type>float_array</type><value>1.6 2.1 2.7</value></param>
-          <param><shader>vertex</shader><name>steepness</name><type>float_array</type><value>0.4 0.4 0.4</value></param>
+          <param><shader>vertex</shader><name>amplitude</name><type>float_array</type><value>0.007 0.005 0.003</value></param>
+          <param><shader>vertex</shader><name>wavenumber</name><type>float_array</type><value>14.0 21.0 31.4</value></param>
+          <param><shader>vertex</shader><name>omega</name><type>float_array</type><value>4.2 5.3 6.6</value></param>
+          <param><shader>vertex</shader><name>steepness</name><type>float_array</type><value>0.6 0.6 0.6</value></param>
           <param><shader>vertex</shader><name>dir0</name><type>float_array</type><value>1.0 0.0</value></param>
           <param><shader>vertex</shader><name>dir1</name><type>float_array</type><value>0.71 0.71</value></param>
           <param><shader>vertex</shader><name>dir2</name><type>float_array</type><value>0.29 -0.96</value></param>
           <param><shader>vertex</shader><name>tau</name><type>float</type><value>2.0</value></param>
           <param><shader>vertex</shader><name>rescale</name><type>float</type><value>0.5</value></param>
-          <param><shader>vertex</shader><name>bumpScale</name><type>float_array</type><value>5 5</value></param>
-          <param><shader>vertex</shader><name>bumpSpeed</name><type>float_array</type><value>0.04 0.02</value></param>
+          <param><shader>vertex</shader><name>bumpScale</name><type>float_array</type><value>9 9</value></param>
+          <param><shader>vertex</shader><name>bumpSpeed</name><type>float_array</type><value>0.06 0.04</value></param>
 
           <param><shader>fragment</shader><name>shallowColor</name><type>float_array</type><value>0.05 0.45 0.55 1</value></param>
           <param><shader>fragment</shader><name>deepColor</name><type>float_array</type><value>0.0 0.2 0.35 1</value></param>
@@ -123,21 +124,22 @@
           <param><shader>vertex</shader><name>camera_position_object_space</name></param>
           <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
 
-          <!-- 3 gentle aquarium ripples, wavelengths 1.5 / 0.9 / 0.55 m.
-               omega is slowed for a calm tank; deep-water dispersion would
-               give ~6.4 / 8.3 / 10.6 rad/s for livelier water. -->
+          <!-- 3 short aquarium ripples (wavelengths 0.45 / 0.30 / 0.20 m,
+               steepness a*k ~ 0.1), not ocean swell. omega is slowed for a
+               calm tank; deep-water dispersion would give ~11.7 / 14.4 /
+               17.5 rad/s. Troughs reach 1.5 cm, inside the volume's 3 cm. -->
           <param><shader>vertex</shader><name>Nwaves</name><type>int</type><value>3</value></param>
-          <param><shader>vertex</shader><name>amplitude</name><type>float_array</type><value>0.012 0.007 0.004</value></param>
-          <param><shader>vertex</shader><name>wavenumber</name><type>float_array</type><value>4.19 6.98 11.42</value></param>
-          <param><shader>vertex</shader><name>omega</name><type>float_array</type><value>1.6 2.1 2.7</value></param>
-          <param><shader>vertex</shader><name>steepness</name><type>float_array</type><value>0.4 0.4 0.4</value></param>
+          <param><shader>vertex</shader><name>amplitude</name><type>float_array</type><value>0.007 0.005 0.003</value></param>
+          <param><shader>vertex</shader><name>wavenumber</name><type>float_array</type><value>14.0 21.0 31.4</value></param>
+          <param><shader>vertex</shader><name>omega</name><type>float_array</type><value>4.2 5.3 6.6</value></param>
+          <param><shader>vertex</shader><name>steepness</name><type>float_array</type><value>0.6 0.6 0.6</value></param>
           <param><shader>vertex</shader><name>dir0</name><type>float_array</type><value>1.0 0.0</value></param>
           <param><shader>vertex</shader><name>dir1</name><type>float_array</type><value>0.71 0.71</value></param>
           <param><shader>vertex</shader><name>dir2</name><type>float_array</type><value>0.29 -0.96</value></param>
           <param><shader>vertex</shader><name>tau</name><type>float</type><value>2.0</value></param>
           <param><shader>vertex</shader><name>rescale</name><type>float</type><value>0.5</value></param>
-          <param><shader>vertex</shader><name>bumpScale</name><type>float_array</type><value>5 5</value></param>
-          <param><shader>vertex</shader><name>bumpSpeed</name><type>float_array</type><value>0.04 0.02</value></param>
+          <param><shader>vertex</shader><name>bumpScale</name><type>float_array</type><value>9 9</value></param>
+          <param><shader>vertex</shader><name>bumpSpeed</name><type>float_array</type><value>0.06 0.04</value></param>
 
           <param><shader>fragment</shader><name>shallowColor</name><type>float_array</type><value>0.15 0.55 0.65 1</value></param>
           <param><shader>fragment</shader><name>deepColor</name><type>float_array</type><value>0.05 0.3 0.45 1</value></param>
@@ -235,7 +237,7 @@
         </plugin>
       </visual>
 
-      <!-- Rising air bubbles in three columns, animated entirely in the
+      <!-- Rising air bubbles in three columns from the sand, animated entirely in the
            vertex shader. Unlike particle emitters, a visual can carry
            visibility_flags, so the robot camera and lidar never see them. -->
       <visual name="bubbles">
@@ -255,8 +257,32 @@
           <param><shader>vertex</shader><name>camera_position_object_space</name></param>
           <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
           <param><shader>vertex</shader><name>radius</name><type>float</type><value>0.02</value></param>
-          <param><shader>vertex</shader><name>height</name><type>float</type><value>0.66</value></param>
+          <param><shader>vertex</shader><name>topZ</name><type>float</type><value>-0.06</value></param>
           <param><shader>vertex</shader><name>speed</name><type>float</type><value>0.18</value></param>
+        </plugin>
+      </visual>
+
+      <!-- The pump's bubbles: a chain of small bubbles from its outlet
+           (models/aquarium_pump), same shaders with a 1 cm radius. -->
+      <visual name="pump_bubbles">
+        <geometry>
+          <mesh><uri>meshes/pump_bubbles.obj</uri></mesh>
+        </geometry>
+        <cast_shadows>false</cast_shadows>
+        <visibility_flags>4</visibility_flags>
+        <plugin filename="swishy-water-shader-system"
+                name="swishy::WaterShaderParam">
+          <depth_write>false</depth_write>
+          <shader language="glsl">
+            <vertex>materials/programs/Bubbles_vs_330.glsl</vertex>
+            <fragment>materials/programs/Bubbles_fs_330.glsl</fragment>
+          </shader>
+          <param><shader>vertex</shader><name>worldviewproj_matrix</name></param>
+          <param><shader>vertex</shader><name>camera_position_object_space</name></param>
+          <param><shader>vertex</shader><name>t</name><value>TIME</value></param>
+          <param><shader>vertex</shader><name>radius</name><type>float</type><value>0.01</value></param>
+          <param><shader>vertex</shader><name>topZ</name><type>float</type><value>-0.06</value></param>
+          <param><shader>vertex</shader><name>speed</name><type>float</type><value>0.2</value></param>
         </plugin>
       </visual>
     </link>
