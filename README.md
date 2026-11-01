@@ -159,6 +159,31 @@ for real fish, an honest sign that Swishy's cartoon tail swings wider than a
 real one. To compare with direct velocity control, launch the simulation with
 `hybrid_swimming:=false`.
 
+| Watch or change | What it is |
+|---|---|
+| `/swim/speed` | Forward speed $U$ from the force balance (m/s) |
+| `/swim/thrust`, `/swim/drag` | Tail thrust $T$ and water drag (N) |
+| `/swim/strouhal` | $St=fA/U$ (0 below 0.05 m/s) |
+| `hybrid_swimming:=false` | Launch argument: `/cmd_vel` sets the speed directly, as before |
+| `fin_span`, `body_mass`, `brake_drag_factor`, `hover_drag_factor`, `speed_gain` | Gait-controller parameters ([src/README.md](src/README.md)) |
+
+Plot them live with `ros2 run rqt_plot rqt_plot /swim/speed/data /swim/thrust/data`.
+
+**What coasting taught us.** Physics that is right on its own can still break the
+navigator, because Nav2 assumes the robot does what it was told at once. The
+first patrols stalled for two different reasons, and a baseline run pinned down
+the cause:
+
+1. *Gliding past the goal.* Near a goal, Nav2 sends speed 0 and turns the fish in
+   place. The fish glided about 0.3 m past the goal toward the wall and got stuck
+   there. Fix: a stop brakes hard (about 4 cm), and the fish then holds position.
+2. *Turning pushed it too fast.* Leaving a station, Nav2 asks for a very slow
+   forward speed plus a turn. The turn made the tail beat harder, and that extra
+   push carried the fish into the plant at about 0.15 m/s instead of 0.026 m/s.
+   Fix: only the swimming share of the tail beat pushes forward.
+3. *Checking against a baseline.* The same patrol with `hybrid_swimming:=false`
+   passed, which showed the swim model, not the map or Nav2, caused the stalls.
+
 ## 2. Senses: fish eyes, LiDAR and IMU
 
 ![Left eye, both fields of view from above, right eye](assets/eye_cameras.png)
