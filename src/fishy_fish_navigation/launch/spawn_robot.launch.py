@@ -24,13 +24,18 @@ def generate_launch_description():
     )
 
     model_arg = DeclareLaunchArgument(
-        'model', default_value='mogi_bot.urdf',
+        'model', default_value='swishy.urdf',
         description='Name of the URDF description to load'
     )
 
     sim_time_arg = DeclareLaunchArgument(
         'use_sim_time', default_value='True',
         description='Flag to enable use_sim_time'
+    )
+
+    hybrid_swimming_arg = DeclareLaunchArgument(
+        'hybrid_swimming', default_value='true',
+        description='Tail thrust against drag sets the speed (false: cmd_vel sets it directly)'
     )
 
     # Define the path to your URDF or Xacro file
@@ -60,7 +65,7 @@ def generate_launch_description():
         package="ros_gz_sim",
         executable="create",
         arguments=[
-            "-name", "mogi_bot",
+            "-name", "swishy",
             "-topic", "robot_description",
             '-x', '0.0',
             '-y', '0.0',
@@ -130,15 +135,15 @@ def generate_launch_description():
 
     # Static transforms for Gazebo sensor frames
     # Gazebo (via ros_gz_bridge) uses namespaced frame_ids like
-    # 'mogi_bot/base_footprint/gpu_lidar' and 'mogi_bot/base_footprint/imu'
+    # 'swishy/base_footprint/gpu_lidar' and 'swishy/base_footprint/imu'
     # in the LaserScan and Imu messages. These frames don't exist in the TF
     # tree published by robot_state_publisher, which causes message filters
     # in RViz and slam_toolbox to drop messages and prevents mapping.
     #
     # We publish zero-offset static transforms from the logical URDF frames
     # to these Gazebo sensor frames so that TF has a complete chain:
-    #   base_footprint -> base_link -> scan_link -> mogi_bot/base_footprint/gpu_lidar
-    #   base_footprint -> base_link -> imu_link  -> mogi_bot/base_footprint/imu
+    #   base_footprint -> base_link -> scan_link -> swishy/base_footprint/gpu_lidar
+    #   base_footprint -> base_link -> imu_link  -> swishy/base_footprint/imu
 
     static_tf_laser = Node(
         package='tf2_ros',
@@ -148,7 +153,7 @@ def generate_launch_description():
             '0', '0', '0',        # x y z
             '0', '0', '0',        # roll pitch yaw
             'scan_link',          # parent frame (URDF)
-            'mogi_bot/base_footprint/gpu_lidar',  # child frame (Gazebo sensor frame_id)
+            'swishy/base_footprint/gpu_lidar',  # child frame (Gazebo sensor frame_id)
         ],
         parameters=[
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
@@ -164,7 +169,7 @@ def generate_launch_description():
             '0', '0', '0',
             '0', '0', '0',
             'imu_link',
-            'mogi_bot/base_footprint/imu',
+            'swishy/base_footprint/imu',
         ],
         parameters=[
             {'use_sim_time': LaunchConfiguration('use_sim_time')},
@@ -191,6 +196,10 @@ def generate_launch_description():
                     "joint_state_broadcaster",
                     "--controller-manager-timeout", "30",
                     "--switch-timeout", "20",
+                    # loading takes >10 s (the default) under a busy CPU; the
+                    # spawner then retried, found it "already loaded" and gave
+                    # up, leaving the controller unconfigured
+                    "--service-call-timeout", "60",
                 ],
                 parameters=[{'use_sim_time': True}],
                 output="screen"
@@ -209,6 +218,10 @@ def generate_launch_description():
                     "fish_joint_controller",
                     "--controller-manager-timeout", "30",
                     "--switch-timeout", "20",
+                    # loading takes >10 s (the default) under a busy CPU; the
+                    # spawner then retried, found it "already loaded" and gave
+                    # up, leaving the controller unconfigured
+                    "--service-call-timeout", "60",
                 ],
                 parameters=[{'use_sim_time': True}],
                 output="screen"
@@ -224,7 +237,9 @@ def generate_launch_description():
         name='fish_gait_controller',
         output='screen',
         parameters=[
-            {'use_sim_time': LaunchConfiguration('use_sim_time')},
+            {'use_sim_time': LaunchConfiguration('use_sim_time'),
+             'hybrid_swimming': ParameterValue(
+                 LaunchConfiguration('hybrid_swimming'), value_type=bool)},
         ],
     )
 
@@ -233,6 +248,7 @@ def generate_launch_description():
     launchDescriptionObject.add_action(world_arg)
     launchDescriptionObject.add_action(model_arg)
     launchDescriptionObject.add_action(sim_time_arg)
+    launchDescriptionObject.add_action(hybrid_swimming_arg)
     launchDescriptionObject.add_action(world_launch)
     launchDescriptionObject.add_action(spawn_urdf_node)
     launchDescriptionObject.add_action(gz_bridge_node)

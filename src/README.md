@@ -178,7 +178,7 @@ This package provides a complete navigation solution for a fish robot, featuring
 #### 1. `robot_state_publisher`
 
 - **Purpose**: Publishes the robot's kinematic state to TF tree
-- **Input**: URDF description (`mogi_bot.urdf`)
+- **Input**: URDF description (`swishy.urdf`)
 - **Output**: TF transforms for robot links
 - **Key**: Establishes base_link → scan_link, imu_link transforms
 
@@ -219,8 +219,8 @@ This package provides a complete navigation solution for a fish robot, featuring
 
 - **Purpose**: Establishes TF chain for Gazebo sensor frames
 - **Transforms**:
-  - `scan_link → mogi_bot/base_footprint/gpu_lidar`
-  - `imu_link → mogi_bot/base_footprint/imu`
+  - `scan_link → swishy/base_footprint/gpu_lidar`
+  - `imu_link → swishy/base_footprint/imu`
 
 ### Custom Nodes
 
@@ -231,6 +231,8 @@ This package provides a complete navigation solution for a fish robot, featuring
 - **Output**: `/fish_joint_controller/commands` (Float64MultiArray positions)
 - **Planar outputs**: `/planar_x_velocity`, `/planar_y_velocity`, and
   `/planar_yaw_velocity` (Float64 velocities)
+- **Swim model outputs**: `/swim/speed` (m/s), `/swim/thrust` and `/swim/drag` (N),
+  `/swim/strouhal` (Float64)
 - **Behavior**:
   - **Forward/Reverse**: Traveling wave with speed-scaled amplitude and frequency
   - **Left/Right**: Curvature bias proportional to commanded yaw rate
@@ -239,9 +241,16 @@ This package provides a complete navigation solution for a fish robot, featuring
   - `max_tail_angle`: 0.55 rad
   - `min_frequency` / `max_frequency`: 1.2 / 2.4 Hz
   - `command_timeout`: 0.5 s
-- **Propulsion**: The controller rotates body-forward speed into world X/Y
-  using odometry heading. Gazebo joint controllers constrain the base to X,
-  Y, and yaw, preventing wall contacts from pitching or rolling the fish.
+  - `hybrid_swimming`: true (false: `/cmd_vel` sets the speed directly)
+  - `fin_span` 0.13 m, `body_mass` 0.43 kg, `water_density` 1000 kg/m³
+  - `brake_drag_factor` 4, `hover_drag_factor` 30, `speed_gain` 2.0,
+    `speed_integral_gain` 1.5
+- **Propulsion**: `/cmd_vel` sets how hard the tail beats. The forward speed
+  comes from Lighthill tail thrust against quadratic drag, integrated each
+  step, with fin braking and hovering at zero command. The controller rotates
+  that speed into world X/Y using odometry heading. Gazebo joint controllers
+  constrain the base to X, Y, and yaw, preventing wall contacts from pitching
+  or rolling the fish.
 
 #### 7. `object_detection_node.py` (optional)
 
@@ -545,8 +554,9 @@ def define_waypoints(self):
 - **Purpose**: Main robot spawning and sensor setup launch file
 - **Arguments**:
   - `world`: World file (default: `fish_world.sdf`)
-  - `model`: URDF file (default: `mogi_bot.urdf`)
+  - `model`: URDF file (default: `swishy.urdf`)
   - `use_sim_time`: Enable simulation time (default: `True`)
+  - `hybrid_swimming`: Tail thrust against drag sets the speed (default: `true`)
 - **Launches**:
   1. `world.launch.py` (Gazebo)
   2. Robot spawner (creates robot in Gazebo)
@@ -602,6 +612,19 @@ def define_waypoints(self):
   - `config/navigation.yaml` (Nav2)
   - `config/slam_toolbox_mapping.yaml` (SLAM)
 - **Usage**: Complete autonomous navigation with real-time mapping
+
+### 6. `navigation_with_map.launch.py`
+
+- **Purpose**: Launches the navigation stack on the saved map
+- **Arguments**: same as `navigation_with_slam.launch.py`
+- **Launches**:
+  1. RViz2 (with navigation config)
+  2. SLAM Toolbox (localization mode, loading `maps/serialized`; the robot starts at the map origin)
+  3. Nav2 navigation stack
+- **Configuration**:
+  - `config/navigation.yaml` (Nav2)
+  - `config/slam_toolbox_localization.yaml` (SLAM)
+- **Usage**: Navigation and showcase missions without re-mapping; `scripts/swishy.sh --map` uses it
 
 ## Configuration Files
 
@@ -789,6 +812,7 @@ src/
 │   ├── launch/                    # Launch files
 │   │   ├── localization_slam_toolbox.launch.py
 │   │   ├── mapping.launch.py
+│   │   ├── navigation_with_map.launch.py
 │   │   ├── navigation_with_slam.launch.py
 │   │   ├── spawn_robot.launch.py  # Main robot launch
 │   │   └── world.launch.py       # Gazebo world launch
@@ -807,8 +831,8 @@ src/
 │   │   ├── object_detection_node.py
 │   │   └── publisher.py           # Fish controller
 │   ├── urdf/                      # Robot description
-│   │   ├── mogi_bot.urdf
-│   │   ├── mogi_bot.gazebo
+│   │   ├── swishy.urdf
+│   │   ├── swishy.gazebo
 │   │   └── materials.xacro
 │   └── worlds/                    # Gazebo world files
 │       ├── fish_world.sdf
@@ -871,7 +895,7 @@ The fish robot uses a unique undulating motion pattern:
 - Check `/cmd_vel` and `/fish_joint_controller/commands`
 - Check `/planar_x_velocity`, `/planar_y_velocity`, and
   `/planar_yaw_velocity`
-- Check Gazebo topics under `/model/mogi_bot/joint/planar_*/cmd_vel`
+- Check Gazebo topics under `/model/swishy/joint/planar_*/cmd_vel`
 
 ## License
 
