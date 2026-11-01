@@ -63,6 +63,9 @@ scripts/swishy.sh --stop                   # stop everything, including a stray 
 Teleop: click its pane, then use `i` `j` `k` `l` (`,` backwards, `k` stop).
 Always stop with `scripts/swishy.sh --stop` (or Ctrl-C in each pane); closing the
 window can leave a Gazebo server running, which makes the next run stutter.
+Gazebo runs in its own partition (`GZ_PARTITION=swishy`), so it can share the
+machine with another Gazebo simulation; when starting by hand next to one, run
+`export GZ_PARTITION=swishy` in every terminal first.
 
 ## Manual start
 
