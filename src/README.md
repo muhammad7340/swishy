@@ -553,7 +553,7 @@ def define_waypoints(self):
 
 - **Purpose**: Main robot spawning and sensor setup launch file
 - **Arguments**:
-  - `world`: World file (default: `fish_world.sdf`)
+  - `world`: World file (default: `fish_world.sdf`; `fish_world_glass.sdf` for the glass tank)
   - `model`: URDF file (default: `swishy.urdf`)
   - `use_sim_time`: Enable simulation time (default: `True`)
   - `hybrid_swimming`: Tail thrust against drag sets the speed (default: `true`)

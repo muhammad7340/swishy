@@ -8,8 +8,8 @@ also scale (distort) the wavelengths, so we generate a tank-sized grid instead.
 Usage:
     python3 scripts/make_water_grid.py [out.obj] [size_x] [size_y] [cells_per_m]
 
-Defaults match the fish tank interior:
-    src/fishy_fish_navigation/models/aquarium_water/meshes/water_grid.obj 3.9 3.8 25
+Defaults match the fish tank interior (inside the glass, 3.73 x 3.635 m):
+    src/fishy_fish_navigation/models/aquarium_water/meshes/water_grid.obj 3.72 3.62 25
 """
 import sys
 
@@ -18,8 +18,8 @@ DEFAULT_OUT = "src/fishy_fish_navigation/models/aquarium_water/meshes/water_grid
 
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_OUT
-    lx = float(sys.argv[2]) if len(sys.argv) > 2 else 3.9
-    ly = float(sys.argv[3]) if len(sys.argv) > 3 else 3.8
+    lx = float(sys.argv[2]) if len(sys.argv) > 2 else 3.72
+    ly = float(sys.argv[3]) if len(sys.argv) > 3 else 3.62
     density = float(sys.argv[4]) if len(sys.argv) > 4 else 25.0  # 4 cm spacing
 
     nx = max(1, round(lx * density))

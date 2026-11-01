@@ -9,7 +9,7 @@ uniform mat4 worldviewproj_matrix;
 uniform vec3 camera_position_object_space;
 uniform float t;
 uniform float radius;     // radius the mesh was built with
-uniform float height;     // rise height in m
+uniform float topZ;       // bubbles rise to this height (model frame) and restart
 uniform float speed;      // m/s
 
 out gl_PerVertex
@@ -27,9 +27,11 @@ out block
 void main()
 {
   vec3 c = vertex.xyz - normal * radius;
-  float phase = fract(t * speed * uv0.y / height + uv0.x);
+  // each bubble rises from its own start (sand or pump outlet) to topZ
+  float rise = max(topZ - c.z, 0.05);
+  float phase = fract(t * speed * uv0.y / rise + uv0.x);
   float seed = uv0.x * 37.0;
-  c.z += phase * height;
+  c.z += phase * rise;
   c.x += 0.012 * sin(9.0 * phase + seed) * phase;        // wobble as they rise
   c.y += 0.012 * cos(7.0 * phase + 1.3 * seed) * phase;
   float r = radius * (0.6 + 0.8 * phase) * (0.7 + 0.6 * fract(seed));  // grow as pressure drops

@@ -21,7 +21,8 @@ showcase_navigation:
     safety_clearance: 0.12
 
     # Cylinder (1.0, 0.8, radius 0.2) and a conservative circular envelope
-    # around the 0.3 x 0.3 m box at (-1.3, 0.85), then the hard aquarium
+    # around the pump at (-1.3, 0.85) (it replaced a 0.3 x 0.3 m box and stays
+    # inside its footprint), then the hard aquarium
     # decor as the LiDAR sees it at scan height (scripts/layout_decor.py):
     # the cactus/pebble focal cluster and the NE, SW and SE corner pieces.
     # The NW driftwood and pebble sit below the beam and are not obstacles.

@@ -29,7 +29,7 @@ ROS 2 Jazzy and Gazebo Harmonic.
 | Localization | SLAM Toolbox localization on the saved map |
 | Navigation | Nav2: NavFn global planner, DWB controller, inflated costmaps, collision monitor |
 | Missions | Showcase, patrol, dance, explorer and interactive modes, checked against a safety envelope |
-| Habitat | Aquascaped tank: rippling water, fog, caustics, bubbles, swaying kelp, rocks, cacti |
+| Habitat | Aquascaped tank: rippling water, fog, caustics, bubbles, swaying kelp, rocks, cacti, a pump and nine swimming real fish (scans) |
 
 ## Quick start
 
@@ -57,6 +57,7 @@ scripts/swishy.sh --stop                   # stop everything, including a stray 
 | Flag | Effect |
 |---|---|
 | `--slam` (default) / `--map` | Build a new map while navigating / navigate on `maps/` |
+| `--glass` | Glass-walled tank, to watch Swishy from outside ([3. Habitat](#3-habitat-the-aquarium)) |
 | `--mode MODE` | `showcase`, `patrol`, `dance`, `explorer`, `interactive` or `none` (default) |
 | `--loop` | Repeat the mission |
 | `--no-teleop`, `--no-eyes` | Skip the teleop pane / the eye-camera viewers |
@@ -80,6 +81,8 @@ source /opt/ros/jazzy/setup.bash && source ~/swishy/install/setup.bash
 ```bash
 # 1. Gazebo: aquarium, Swishy, bridges, gait controller
 ros2 launch fishy_fish_navigation spawn_robot.launch.py
+#    ...or the glass-walled tank:
+ros2 launch fishy_fish_navigation spawn_robot.launch.py world:=fish_world_glass.sdf
 
 # 2a. Build a new map while navigating (SLAM Toolbox mapping + Nav2 + RViz)
 ros2 launch fishy_fish_navigation navigation_with_slam.launch.py
@@ -213,7 +216,7 @@ left eye.
 
 One 360° LiDAR scan (blue rays, orange hits) from the middle of the tank, over the
 saved map. The GPU LiDAR has 360 beams, 0.05 to 10 m range and runs at 10 Hz; it
-sees the glass, the box, the cylinder and the hard decor, but not the water, kelp or
+sees the glass, the pump, the cylinder and the hard decor, but not the water, kelp or
 grass (see [Habitat](#3-habitat-the-aquarium)). An IMU at 50 Hz and the odometry
 feed a `robot_localization` EKF.
 
@@ -230,17 +233,49 @@ the cactus centrepiece with its pebble; a starfish and shells by the front glass
 lily pads seen from below; rising bubbles over the grass; kelp and rocks.
 
 **Water** (`models/aquarium_water/`), all visual-only and drawn on the GPU:
-a rippling surface from three Gerstner waves, underwater fog, caustics on the sand,
-swaying light shafts, rising bubbles and a tinted water volume. Gazebo's renderer
+a rippling surface from three short Gerstner ripples (0.45, 0.30 and 0.20 m
+wavelengths, not ocean swell), underwater fog, caustics on the sand, swaying light
+shafts, rising bubbles (three columns from the sand and a chain of small bubbles
+from the pump's outlet) and a tinted water volume. Gazebo's renderer
 has no fog, so 40 nested shells are re-centred on the camera by a vertex shader.
 The shaders use `swishy::WaterShaderParam` (`src/swishy_water`): gz-sim's
 `ShaderParam` with depth writes switched off, so transparent effects blend instead
 of hiding what is behind them.
 
+**Two tanks, same habitat.** `fish_world.sdf` is the classic tank with opaque
+blue walls. `fish_world_glass.sdf` (`--glass`) is the same world for watching
+from outside:
+- thin glass panes on three sides (the tank mesh's 14 cm walls looked doubled
+  through glass) and the coloured back wall;
+- a frame in the back wall's blue, whose level base hides the floor's edge
+  (the tank model's floor rises 0.18 m from west to east);
+- deeper water (`aquarium_water_deep`: surface at 2.3 m, about 1.35 m above
+  the sand instead of 0.6 m), so the tank has aquarium proportions; Swishy
+  still swims near the bottom, at the same height as in the classic tank;
+- the ground raised to 0.7 m and the glass ending just above the waterline, so
+  most of what you see is water;
+- the water sized to the inside of the glass.
+
+The panes sit exactly where the old walls' inner faces were, so the robot, decor,
+map and routes are identical and the saved map works in both.
+
 **Decor** (`models/`): Fuel kelp swaying in a vertex shader (each plant out of step
 with the others), a cactus-and-pebble centrepiece, cacti, rocks and a driftwood log
-in the corners, grass and ferns, shells, a starfish, lily pads and a painted
-backdrop. The sun and a spot light over the centrepiece cast shadows.
+in the corners, grass and ferns, shells, a starfish, lily pads, a painted
+backdrop and a pump on a slate plinth, where the red box used to be, with a bubble
+stream from its outlet.
+
+**Fish** (`models/fish_*`): nine real fish of five species swim around the tank:
+carp, fusilier, pale bleak, a vermiculated puffer and a pompano. They are
+photogrammetry scans of real specimens, reduced to 4,000 to 6,000 triangles and
+a 128 px texture each, at real sizes (15 to 32 cm). Only single-piece scans are
+used: scans made of many textured patches fell apart when reduced. A vertex shader (`fish_common/SwimFish`) moves each one
+along its own ellipse or figure-eight, turns it along the path, bobs it and
+bends its body in a wave from head to tail.
+Copies of a species swim out of step. The fish are visual only and hidden from
+the LiDAR and eye cameras (`visibility_flags` 4), so the map and navigation are
+unchanged. `scripts/make_fish_models.py` rebuilds them from the scans, and
+`FISH` in `scripts/layout_decor.py` places them in both tanks. The sun and a spot light over the centrepiece cast shadows.
 
 **Sensor-safe by design:**
 - Water visuals carry `visibility_flags` 4 and soft decor (kelp, grass, shells,
@@ -252,8 +287,9 @@ backdrop. The sun and a spot light over the centrepiece cast shadows.
 - Decor colours stay outside the colour detector's HSV ranges.
 
 Change the layout in `scripts/layout_decor.py`, which checks every route and rewrites
-the decor block in `fish_world.sdf`. The water meshes come from
-`scripts/make_water_grid.py` and `scripts/make_aquarium_effects.py`, the shells,
+the decor block in both worlds. The water meshes come from
+`scripts/make_water_grid.py` and `scripts/make_aquarium_effects.py` (which also
+generates `aquarium_water_deep` from `aquarium_water`), the shells,
 starfish and backdrop from `scripts/make_decor_assets.py`, and the double-sided
 kelp from `scripts/make_kelp_sway_meshes.py`.
 
@@ -266,7 +302,8 @@ patrol stations (orange) and its start pose (aqua). SLAM Toolbox builds a 5 cm
 occupancy grid from the LiDAR by scan matching and pose-graph optimization with
 loop closure, conceptually
 $\mathbf{x}^{*}=\arg\min_{\mathbf{x}}\sum_k\lVert\mathbf{r}_k(\mathbf{x})\rVert_{\Omega_k}^{2}$.
-Dark cells are walls and obstacles; the rounded shapes are the box, the cylinder,
+Dark cells are walls and obstacles; the rounded shapes are the pump (mapped when
+it was still a 0.3 m box), the cylinder,
 the centrepiece and the tank's own rocks and coral.
 
 ## 5. Navigation: Nav2
@@ -452,8 +489,10 @@ $P_0$ along circular orbits (implementation adapted from VRX):
 
 $$P=P_0+\sum_{i=1}^{3}\Big(-q_i\,a_i\,\mathbf d_i\sin\theta_i,\;\;a_i\cos\theta_i\Big),\qquad \theta_i=k_i\,(\mathbf d_i\cdot P_0)-\Omega_i t \tag{15}$$
 
-with steepness $q_i$, amplitude $a_i$ (ramped in as $1-e^{-t/\tau}$), wavenumber
-$k_i$, direction $\mathbf d_i$ and angular frequency $\Omega_i$.
+with steepness $q_i=0.6$, amplitude $a_i=(7,\,5,\,3)$ mm (ramped in as
+$1-e^{-t/\tau}$), wavenumber $k_i=(14,\,21,\,31.4)$ rad/m (wavelengths 0.45, 0.30 and
+0.20 m), direction $\mathbf d_i$ and angular frequency $\Omega_i=(4.2,\,5.3,\,6.6)$ rad/s,
+slower than deep-water dispersion $\Omega=\sqrt{gk}$ for a calm tank.
 
 **Reflection: Fresnel term** [20]. Reflection and water colour are blended with a
 Schlick-style power of the facing angle:
@@ -618,5 +657,12 @@ Built with ROS 2 Jazzy, Gazebo Harmonic, SLAM Toolbox, Nav2 and robot_localizati
   adapted as `swishy::WaterShaderParam` in `src/swishy_water`
 - Kelp and Ocean Rock models by Cole Biesemeyer, [Gazebo Fuel](https://fuel.gazebosim.org/1.0/Cole),
   CC-BY 4.0 (rescaled, textures downscaled to 1024², rock texture desaturated)
+- Fish scans (carp, fusilier, pale bleak, vermiculated puffer, pompano) by
+  [ffish.asia / floraZia.com](https://sketchfab.com/ffishAsia-and-floraZia), CC0 1.0,
+  via [lisa-1002/fishing3d](https://github.com/lisa-1002/fishing3d) (decimated,
+  textures downscaled to 128²)
+- "Pump" by Ian Chen, Open Robotics, [Gazebo Fuel](https://app.gazebosim.org/OpenRobotics/fuel/models/Pump),
+  CC-BY 4.0 (scaled to 0.30 on a plinth, textures downscaled to 512², albedo
+  saturation capped below the colour detector's blue range)
 - Nature models (cacti, mossy rock, driftwood, grass, fern, lily pad) by
   [Quaternius](https://quaternius.com), Ultimate Nature Pack, CC0
