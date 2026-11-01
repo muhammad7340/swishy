@@ -132,11 +132,32 @@ nearest the head (±11°); orange: joint 2 (±18°); aqua: joint 3 at the tail (
 Each lags the one before it, so the wave travels head to tail.
 
 A ROS 2 gait controller (`publisher.py`) turns Nav2's velocity commands into these
-joint targets at 50 Hz and moves the body in the plane:
-$[\dot{x},\dot{y},\dot{\psi}]^T=[v\cos\psi,v\sin\psi,\omega]^T$. Translation goes
-through constrained planar joints rather than CFD-resolved tail thrust: a deliberate
-abstraction that keeps gait-navigation experiments stable and repeatable, and leaves
-a clear path toward hydrodynamic force models and physical validation.
+joint targets at 50 Hz. **The tail sets the speed:** a commanded speed only decides
+how hard the tail beats, and the forward speed $U$ then comes from a 1-D force
+balance between the tail's thrust and the water's drag:
+
+$(m+m_a)\dot{U}=T-k\,U|U|-c\,U$, with $T=\tfrac{1}{2}m_f\left(\dot{h}^2-U^2h'^2\right)$, $m_f=\tfrac{\pi}{4}\rho s^2$.
+
+$T$ is Lighthill's elongated-body thrust from the fin tip's sideways velocity
+$\dot{h}$ and slope $h'$ (fin span $s=0.13$ m). It shrinks as the fish speeds up and
+vanishes when the body moves as fast as its own wave. So Swishy accelerates over
+about 0.4 s, coasts when it eases off, and surges slightly with each tail beat.
+Asked to stop, it brakes hard by flaring its fins (a stop takes about 4 cm) and
+then hovers, its pectoral fins cancelling the tail's push. This lets it turn on
+the spot at a goal without drifting, which Nav2 relies on. When the tail beats
+harder to turn than the speed needs, only the swimming share of the beat pushes
+forward. A small speed loop raises the beat when Swishy is slower than commanded.
+The drag $k$ is calibrated so the full-power gait balances just above Nav2's
+0.5 m/s limit.
+
+The result moves the body through planar joints:
+$[\dot{x},\dot{y},\dot{\psi}]^T=[U\cos\psi,U\sin\psi,\omega]^T$. Turning ($\omega$)
+is still kinematic, and there is no 3-D fluid or sideways drift. Watch the model
+live with `ros2 topic echo /swim/speed` (also `/swim/thrust`, `/swim/drag` and
+`/swim/strouhal`). The Strouhal number $St=fA/U$ reads about 1, against 0.2–0.4
+for real fish, an honest sign that Swishy's cartoon tail swings wider than a
+real one. To compare with direct velocity control, launch the simulation with
+`hybrid_swimming:=false`.
 
 ## 2. Senses: fish eyes, LiDAR and IMU
 
@@ -284,7 +305,7 @@ swishy/
     ├── fishy_fish_navigation/       robot, world, launch files, configs, maps
     │   ├── urdf/swishy.urdf          body, joints, eye cameras, LiDAR, IMU
     │   ├── urdf/swishy.gazebo        Gazebo plugins and sensors
-    │   ├── src/publisher.py          gait controller (body wave + planar motion)
+    │   ├── src/publisher.py          gait controller (body wave + thrust/drag swim model)
     │   ├── worlds/fish_world.sdf     the aquarium
     │   └── maps/                     saved map (serialized + pgm)
     ├── fishy_fish_navigation_py/    showcase missions, map/pose utilities, tests

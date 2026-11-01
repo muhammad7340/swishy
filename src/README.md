@@ -231,6 +231,8 @@ This package provides a complete navigation solution for a fish robot, featuring
 - **Output**: `/fish_joint_controller/commands` (Float64MultiArray positions)
 - **Planar outputs**: `/planar_x_velocity`, `/planar_y_velocity`, and
   `/planar_yaw_velocity` (Float64 velocities)
+- **Swim model outputs**: `/swim/speed` (m/s), `/swim/thrust` and `/swim/drag` (N),
+  `/swim/strouhal` (Float64)
 - **Behavior**:
   - **Forward/Reverse**: Traveling wave with speed-scaled amplitude and frequency
   - **Left/Right**: Curvature bias proportional to commanded yaw rate
@@ -239,9 +241,16 @@ This package provides a complete navigation solution for a fish robot, featuring
   - `max_tail_angle`: 0.55 rad
   - `min_frequency` / `max_frequency`: 1.2 / 2.4 Hz
   - `command_timeout`: 0.5 s
-- **Propulsion**: The controller rotates body-forward speed into world X/Y
-  using odometry heading. Gazebo joint controllers constrain the base to X,
-  Y, and yaw, preventing wall contacts from pitching or rolling the fish.
+  - `hybrid_swimming`: true (false: `/cmd_vel` sets the speed directly)
+  - `fin_span` 0.13 m, `body_mass` 0.43 kg, `water_density` 1000 kg/m³
+  - `brake_drag_factor` 4, `hover_drag_factor` 30, `speed_gain` 2.0,
+    `speed_integral_gain` 1.5
+- **Propulsion**: `/cmd_vel` sets how hard the tail beats. The forward speed
+  comes from Lighthill tail thrust against quadratic drag, integrated each
+  step, with fin braking and hovering at zero command. The controller rotates
+  that speed into world X/Y using odometry heading. Gazebo joint controllers
+  constrain the base to X, Y, and yaw, preventing wall contacts from pitching
+  or rolling the fish.
 
 #### 7. `object_detection_node.py` (optional)
 
@@ -547,6 +556,7 @@ def define_waypoints(self):
   - `world`: World file (default: `fish_world.sdf`)
   - `model`: URDF file (default: `swishy.urdf`)
   - `use_sim_time`: Enable simulation time (default: `True`)
+  - `hybrid_swimming`: Tail thrust against drag sets the speed (default: `true`)
 - **Launches**:
   1. `world.launch.py` (Gazebo)
   2. Robot spawner (creates robot in Gazebo)
