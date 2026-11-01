@@ -33,6 +33,11 @@ def generate_launch_description():
         description='Flag to enable use_sim_time'
     )
 
+    hybrid_swimming_arg = DeclareLaunchArgument(
+        'hybrid_swimming', default_value='true',
+        description='Tail thrust against drag sets the speed (false: cmd_vel sets it directly)'
+    )
+
     # Define the path to your URDF or Xacro file
     urdf_file_path = PathJoinSubstitution([
         pkg_fishy_fish_navigation,  # Replace with your package name
@@ -232,7 +237,9 @@ def generate_launch_description():
         name='fish_gait_controller',
         output='screen',
         parameters=[
-            {'use_sim_time': LaunchConfiguration('use_sim_time')},
+            {'use_sim_time': LaunchConfiguration('use_sim_time'),
+             'hybrid_swimming': ParameterValue(
+                 LaunchConfiguration('hybrid_swimming'), value_type=bool)},
         ],
     )
 
@@ -241,6 +248,7 @@ def generate_launch_description():
     launchDescriptionObject.add_action(world_arg)
     launchDescriptionObject.add_action(model_arg)
     launchDescriptionObject.add_action(sim_time_arg)
+    launchDescriptionObject.add_action(hybrid_swimming_arg)
     launchDescriptionObject.add_action(world_launch)
     launchDescriptionObject.add_action(spawn_urdf_node)
     launchDescriptionObject.add_action(gz_bridge_node)
