@@ -17,12 +17,13 @@ ROS 2 Jazzy and Gazebo Harmonic.
 [4. Mapping](#4-mapping-slam-toolbox) ·
 [5. Navigation](#5-navigation-nav2) ·
 [6. Missions](#6-missions-showcase-modes) ·
+[7. Models and references](#7-models-and-references) ·
 [Repository](#repository) ·
 [Git workflow](#git-workflow)
 
 | Capability | How |
 |---|---|
-| Fish-like swimming | Traveling wave over three tail joints, 1.2 to 2.4 Hz, synced to velocity commands |
+| Fish-like swimming | Traveling wave over three tail joints, 1.2 to 2.4 Hz; Lighthill tail thrust against drag sets the speed |
 | Vision | An invisible camera in each eye, looking out its own side like a real fish |
 | Mapping | SLAM Toolbox: 360° LiDAR, scan matching, loop closure, 5 cm occupancy map |
 | Localization | SLAM Toolbox localization on the saved map |
@@ -157,7 +158,8 @@ live with `ros2 topic echo /swim/speed` (also `/swim/thrust`, `/swim/drag` and
 `/swim/strouhal`). The Strouhal number $St=fA/U$ reads about 1, against 0.2–0.4
 for real fish, an honest sign that Swishy's cartoon tail swings wider than a
 real one. To compare with direct velocity control, launch the simulation with
-`hybrid_swimming:=false`.
+`hybrid_swimming:=false`. Every equation, parameter value and source is collected
+in [7.1 Locomotion](#71-locomotion-publisherpy).
 
 | Watch or change | What it is |
 |---|---|
@@ -280,7 +282,7 @@ costmap the DWB controller drives on.
 | Nav2 | |
 |---|---|
 | Global planner | NavFn on the static map + obstacle layer, 1 Hz |
-| Controller | DWB, up to 0.5 m/s and 1.5 rad/s, goal tolerance 0.25 m |
+| Controller | DWB, up to 0.5 m/s and 1.5 rad/s, goal tolerance 0.15 m |
 | Costmaps | 5 cm cells, robot radius 0.22 m, inflation 0.70 m |
 | Safety | Collision monitor on the LiDAR, active during custom paths |
 
@@ -315,6 +317,233 @@ can stall there.
 
 The figures in sections 2, 4, 5 and 6 are rendered from a recorded patrol by
 `scripts/make_readme_figures.py` (its header shows how to record the bag).
+
+## 7. Models and references
+
+Every model Swishy uses, written out with its source and the values in the code,
+so the project can be cited, checked and extended. Numbers in brackets point to
+the [references](#references) below.
+
+### 7.1 Locomotion (`publisher.py`)
+
+**Body wave.** Body-caudal-fin swimmers bend in a wave that travels from head to
+tail with an amplitude that grows toward the tail, as in carangiform swimming
+[1, 2]. Swishy samples that wave at its three tail joints:
+
+$$q_i(t)=b_i\,\kappa+a_i\,A\,\sin\!\big(\phi(t)-(i-1)\,\Delta\phi\big),\qquad \dot\phi=2\pi f,\qquad i=1,2,3 \tag{1}$$
+
+with amplitude envelope $a=(0.45,\,0.72,\,1.0)$, turning envelope
+$b=(0.35,\,0.65,\,1.0)$ and phase lag $\Delta\phi=\pi/3$.
+
+**Gait schedule.** An activity level $\alpha\in[0,1]$ sets the beat. As in real
+fish, the frequency rises with speed while the amplitude stays near constant [3, 4]:
+
+$$f=f_{\min}+(f_{\max}-f_{\min})\,\alpha,\qquad A=A_{\max}\,\sigma\,\big(r+(1-r)\,\alpha\big),\qquad \sigma=\min(1,\alpha/0.15),\qquad \kappa=\kappa_{\max}\,\frac{\omega}{\omega_{\max}} \tag{2}$$
+
+with $f_{\min}=1.2$ Hz, $f_{\max}=2.4$ Hz, $A_{\max}=0.55$ rad, $r=0.6$,
+$\kappa_{\max}=0.28$ rad and $\omega_{\max}=1.5$ rad/s.
+
+**Fin-tip kinematics.** For tail segments of length $\ell=(0.050,\,0.0495,\,0.102)$ m,
+measured from the meshes, the fin tip's sideways offset $h$ and slope $h'$ in the
+body frame are
+
+$$\theta_k=\sum_{j\le k}q_j,\qquad h=\sum_{k=1}^{3}\ell_k\sin\theta_k,\qquad h'=\tan\theta_3 \tag{3}$$
+
+**Thrust: Lighthill's elongated-body theory** [5, 6]. A slender swimmer pushes
+water sideways at its trailing edge, and the reaction gives a forward thrust:
+
+$$T=\tfrac{1}{2}\,m_f\left(\dot h^{2}-U^{2}h'^{2}\right),\qquad m_f=\tfrac{\pi}{4}\,\rho\,s^{2} \tag{4}$$
+
+$m_f$ is the fluid mass per metre carried by the fin (added mass of a flat plate of
+span $s$). With $\rho=1000$ kg/m³ and $s=0.13$ m, $m_f=13.3$ kg/m. The thrust falls
+as the fish speeds up and vanishes when $U=|\dot h/h'|$, the speed of the body wave
+itself. Swishy uses the instantaneous form, clamps it at zero, smooths it over
+0.2 s (about half a beat) and keeps only the swimming share of the beat:
+$T_{\text{eff}}=\eta\,T$, where $\eta=e/\alpha$ is the speed loop's effort over the
+total activity, so a hard turning beat does not add forward speed.
+
+**Surge dynamics** [7]. Forward speed $U$ follows a one-degree-of-freedom balance
+of thrust against linear and quadratic drag, in the style of Fossen's
+marine-craft models:
+
+$$(m+m_a)\,\dot U=T_{\text{eff}}-\beta\,k\,U|U|-c\,U \tag{5}$$
+
+with $m=0.43$ kg, surge added mass $m_a=0.05$ kg and $c=0.3$ N·s/m. The factor
+$\beta$ models fin braking: $\beta$ rises from 1 to 4 as the fish exceeds the
+commanded speed by up to 0.1 m/s, and $\beta=30$ with $T_{\text{eff}}=0$ when it
+is told to stop (hovering).
+
+**Drag calibration.** $k$ is chosen so the full-power gait balances just above the
+navigation speed limit, $U_{\text{top}}=1.2\times0.5$ m/s:
+
+$$k=\frac{\overline{T}(U_{\text{top}})-c\,U_{\text{top}}}{U_{\text{top}}^{2}}\approx19.2\ \text{N·s}^2/\text{m}^2 \tag{6}$$
+
+where $\overline{T}$ is Eq. (4) averaged over one beat at $\alpha=1$
+(7.1 N at 0.6 m/s).
+
+**Implicit integration** [8]. The drag is stiff (this light fish stops within a
+few 20 ms steps), so each step solves Eq. (5) backward-Euler for the new speed
+$U'$, which is the positive root of a quadratic:
+
+$$k\beta\,\Delta t\,U'^{2}+(M+c\,\Delta t)\,U'-\big(M U+T_{\text{eff}}\,\Delta t\big)=0,\qquad M=m+m_a \tag{7}$$
+
+(mirrored for negative momentum). Explicit Euler oscillated and diverged at
+these values.
+
+**Speed loop.** Because speed now emerges from Eq. (5), a PI loop on the speed
+error sets the beat effort, with feed-forward from the commanded share of top
+speed:
+
+$$e=\frac{|U_{\text{cmd}}|}{U_{\text{top}}}+K_p\,\frac{|U_{\text{cmd}}|-|U|}{U_{\max}}+K_i\int\frac{|U_{\text{cmd}}|-|U|}{U_{\max}}\,dt,\qquad \alpha=\max\!\big(e,\;0.55\,|\omega|/\omega_{\max}\big) \tag{8}$$
+
+with $K_p=2.0$, $K_i=1.5$ (integral clamped to ±0.5) and $U_{\max}=0.5$ m/s.
+
+**Planar motion.** The speed drives the body through three planar joints:
+
+$$\dot x=U\cos\psi,\qquad \dot y=U\sin\psi,\qquad \dot\psi=\omega \tag{9}$$
+
+**Strouhal number** [9, 10, 11]. A check on the gait, published on
+`/swim/strouhal`:
+
+$$St=\frac{f\,A_{pp}}{U} \tag{10}$$
+
+where $A_{pp}$ is the fin tip's peak-to-peak sweep. Efficient swimmers cruise at
+$0.2<St<0.4$ [9]. Swishy reads about 1, because its cartoon tail swings wider than
+a real fish's for the same speed.
+
+**Assumptions and limits.** One-dimensional surge only: no sway, heave or
+fluid-driven yaw, and no 3-D flow or vortex wake. Turning ($\omega$) is still
+kinematic. The thrust is the reactive (added-mass) term only; resistive
+skin-friction forces along the body are folded into $k$ and $c$. Coefficients are
+calibrated to the gait, not measured on a physical fish.
+
+### 7.2 Estimation and navigation
+
+**State estimation** [12]. `robot_localization` fuses the planar-joint odometry
+and the IMU with an extended Kalman filter:
+
+$$\hat x_{k|k-1}=f(\hat x_{k-1}),\quad P_{k|k-1}=F P_{k-1} F^{\top}+Q,\quad K=P_{k|k-1}H^{\top}\big(HP_{k|k-1}H^{\top}+R\big)^{-1},\quad \hat x_k=\hat x_{k|k-1}+K\big(z_k-h(\hat x_{k|k-1})\big) \tag{11}$$
+
+**Mapping** [13, 14]. SLAM Toolbox builds a pose graph from scan matching and loop
+closures and solves for the poses $x$ that best agree with all relative
+measurements $z_{ij}$:
+
+$$x^{*}=\arg\min_{x}\sum_{(i,j)}e_{ij}^{\top}\,\Omega_{ij}\,e_{ij},\qquad e_{ij}=z_{ij}\ominus\left(x_i^{-1}\oplus x_j\right) \tag{12}$$
+
+**Costmap inflation** [15, 16]. Nav2's inflation layer lets cost decay
+exponentially with distance $d$ from the nearest obstacle, beyond the robot's
+inscribed radius $r_{\text{in}}=0.22$ m:
+
+$$C(d)=252\,e^{-\gamma\,(d-r_{\text{in}})},\qquad \gamma=3.0,\qquad d\le0.70\ \text{m} \tag{13}$$
+
+**Local control** [17]. The DWB controller samples velocities $(v,\omega)$ reachable
+within its acceleration limits (the dynamic window), simulates each for 1.7 s and
+picks the one with the lowest weighted critic cost:
+
+$$(v,\omega)^{*}=\arg\min_{(v,\omega)\in V_d}\sum_{c}w_c\,C_c(v,\omega) \tag{14}$$
+
+with critics for path alignment and distance, goal alignment and distance,
+rotation to goal, oscillation and obstacles.
+
+### 7.3 Rendering the habitat (GLSL shaders)
+
+**Water surface: Gerstner waves** [18, 19]. Three waves move each surface vertex
+$P_0$ along circular orbits (implementation adapted from VRX):
+
+$$P=P_0+\sum_{i=1}^{3}\Big(-q_i\,a_i\,\mathbf d_i\sin\theta_i,\;\;a_i\cos\theta_i\Big),\qquad \theta_i=k_i\,(\mathbf d_i\cdot P_0)-\Omega_i t \tag{15}$$
+
+with steepness $q_i$, amplitude $a_i$ (ramped in as $1-e^{-t/\tau}$), wavenumber
+$k_i$, direction $\mathbf d_i$ and angular frequency $\Omega_i$.
+
+**Reflection: Fresnel term** [20]. Reflection and water colour are blended with a
+Schlick-style power of the facing angle:
+
+$$F=\mathrm{clamp}\big((1-\mathbf n\cdot\mathbf v)^{p},\,0.05,\,1\big) \tag{16}$$
+
+**Underwater fog: Beer–Lambert attenuation** [21]. Each of the 40 camera-centred
+shells, spaced $\delta=0.1$ m apart, adds $1-e^{-\sigma\delta}$ of fog colour, so an
+object $d$ away sits behind about $d/\delta$ shells and is tinted like exponential
+fog:
+
+$$\alpha_{\text{fog}}(d)\approx1-e^{-\sigma d} \tag{17}$$
+
+**Caustics: cellular noise** [22]. Bright lines are drawn where two Worley cells
+meet, i.e. where the gap between the nearest and second-nearest feature point is
+small:
+
+$$I=1-\mathrm{smoothstep}\big(0,\,w,\;F_2(\mathbf p)-F_1(\mathbf p)\big) \tag{18}$$
+
+Two layers at different scales and speeds and a gentle domain warp keep the
+pattern from looking tiled.
+
+**Kelp sway.** A cantilever-like profile keeps the base fixed and grows the bend
+with height squared, so the tips move most:
+
+$$\Delta x=A_s\,(z/H)^{2}\sin(\Omega_s t+\varphi+2z) \tag{19}$$
+
+with a per-plant phase $\varphi$ and a slightly different frequency for each plant.
+
+### References
+
+1. M. Sfakiotakis, D. M. Lane and J. B. C. Davies, "Review of fish swimming modes
+   for aquatic locomotion," *IEEE J. Oceanic Eng.*, 24(2):237–252, 1999.
+   [doi:10.1109/48.757275](https://doi.org/10.1109/48.757275)
+2. B. Sun *et al.*, "Recent progress in modeling and control of bio-inspired fish
+   robots," *J. Mar. Sci. Eng.*, 10(6):773, 2022.
+   [doi:10.3390/jmse10060773](https://doi.org/10.3390/jmse10060773)
+3. R. Bainbridge, "The speed of swimming of fish as related to size and to the
+   frequency and amplitude of the tail beat," *J. Exp. Biol.*, 35(1):109–133, 1958.
+   [doi:10.1242/jeb.35.1.109](https://doi.org/10.1242/jeb.35.1.109)
+4. M. Saadat *et al.*, "On the rules for aquatic locomotion," *Phys. Rev. Fluids*,
+   2:083102, 2017. [doi:10.1103/PhysRevFluids.2.083102](https://doi.org/10.1103/PhysRevFluids.2.083102)
+5. M. J. Lighthill, "Note on the swimming of slender fish," *J. Fluid Mech.*,
+   9(2):305–317, 1960. [doi:10.1017/S0022112060001110](https://doi.org/10.1017/S0022112060001110)
+6. M. J. Lighthill, "Large-amplitude elongated-body theory of fish locomotion,"
+   *Proc. R. Soc. Lond. B*, 179:125–138, 1971.
+   [doi:10.1098/rspb.1971.0085](https://doi.org/10.1098/rspb.1971.0085)
+7. T. I. Fossen, *Handbook of Marine Craft Hydrodynamics and Motion Control*,
+   Wiley, 2011. [doi:10.1002/9781119994138](https://doi.org/10.1002/9781119994138)
+8. E. Hairer and G. Wanner, *Solving Ordinary Differential Equations II: Stiff and
+   Differential-Algebraic Problems*, 2nd ed., Springer, 1996.
+   [doi:10.1007/978-3-642-05221-7](https://doi.org/10.1007/978-3-642-05221-7)
+9. G. K. Taylor, R. L. Nudds and A. L. R. Thomas, "Flying and swimming animals
+   cruise at a Strouhal number tuned for high power efficiency," *Nature*,
+   425:707–711, 2003. [doi:10.1038/nature02000](https://doi.org/10.1038/nature02000)
+10. G. S. Triantafyllou, M. S. Triantafyllou and M. A. Grosenbaugh, "Optimal thrust
+    development in oscillating foils with application to fish propulsion,"
+    *J. Fluids Struct.*, 7(2):205–224, 1993.
+    [doi:10.1006/jfls.1993.1012](https://doi.org/10.1006/jfls.1993.1012)
+11. Saadat *et al.* [4], for $St$ as a consequence of body shape and drag.
+12. T. Moore and D. Stouch, "A generalized extended Kalman filter implementation
+    for the Robot Operating System," in *Intelligent Autonomous Systems 13*,
+    Springer AISC 302:335–348, 2015.
+    [doi:10.1007/978-3-319-08338-4_25](https://doi.org/10.1007/978-3-319-08338-4_25)
+13. S. Macenski and I. Jambrecic, "SLAM Toolbox: SLAM for the dynamic world,"
+    *J. Open Source Softw.*, 6(61):2783, 2021.
+    [doi:10.21105/joss.02783](https://doi.org/10.21105/joss.02783)
+14. G. Grisetti, R. Kümmerle, C. Stachniss and W. Burgard, "A tutorial on
+    graph-based SLAM," *IEEE Intell. Transp. Syst. Mag.*, 2(4):31–43, 2010.
+    [doi:10.1109/MITS.2010.939925](https://doi.org/10.1109/MITS.2010.939925)
+15. S. Macenski, F. Martín, R. White and J. Ginés Clavero, "The Marathon 2: A
+    navigation system," *IEEE/RSJ IROS*, 2718–2725, 2020.
+    [doi:10.1109/IROS45743.2020.9341207](https://doi.org/10.1109/IROS45743.2020.9341207)
+16. D. V. Lu, D. Hershberger and W. D. Smart, "Layered costmaps for
+    context-sensitive navigation," *IEEE/RSJ IROS*, 709–715, 2014.
+    [doi:10.1109/IROS.2014.6942636](https://doi.org/10.1109/IROS.2014.6942636)
+17. D. Fox, W. Burgard and S. Thrun, "The dynamic window approach to collision
+    avoidance," *IEEE Robot. Autom. Mag.*, 4(1):23–33, 1997.
+    [doi:10.1109/100.580977](https://doi.org/10.1109/100.580977)
+18. A. Fournier and W. T. Reeves, "A simple model of ocean waves," *ACM SIGGRAPH
+    Comput. Graph.*, 20(4):75–84, 1986.
+    [doi:10.1145/15886.15894](https://doi.org/10.1145/15886.15894)
+19. J. Tessendorf, "Simulating ocean water," *SIGGRAPH Course Notes*, 2001.
+20. C. Schlick, "An inexpensive BRDF model for physically-based rendering,"
+    *Comput. Graph. Forum*, 13(3):233–246, 1994.
+    [doi:10.1111/1467-8659.1330233](https://doi.org/10.1111/1467-8659.1330233)
+21. C. D. Mobley, *Light and Water: Radiative Transfer in Natural Waters*,
+    Academic Press, 1994.
+22. S. Worley, "A cellular texture basis function," *Proc. SIGGRAPH '96*, 291–294,
+    1996. [doi:10.1145/237170.237267](https://doi.org/10.1145/237170.237267)
 
 ## Repository
 
