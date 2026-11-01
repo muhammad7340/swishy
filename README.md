@@ -121,7 +121,7 @@ After changing a `.urdf`, launch file or script, rebuild with
 Fish swim by passing a wave of lateral curvature from the body toward the caudal
 fin. Swishy approximates this over three tail joints:
 
-$q_i(t)=b_i\kappa(t)+a_iA(s)\sin(\phi(t)-i\Delta\phi)$, with $\dot{\phi}=2\pi f(s)$.
+$`q_i(t)=b_i\kappa(t)+a_iA(s)\sin(\phi(t)-i\Delta\phi)`$, with $\dot{\phi}=2\pi f(s)$.
 
 Coefficients $a_i$ grow toward the tail, $\Delta\phi=\pi/3$ makes each joint lag
 the one ahead of it, and $\kappa$ bends the body into turns. Like a real fish, the
@@ -140,7 +140,7 @@ joint targets at 50 Hz. **The tail sets the speed:** a commanded speed only deci
 how hard the tail beats, and the forward speed $U$ then comes from a 1-D force
 balance between the tail's thrust and the water's drag:
 
-$(m+m_a)\dot{U}=T-k\,U|U|-c\,U$, with $T=\tfrac{1}{2}m_f\left(\dot{h}^2-U^2h'^2\right)$, $m_f=\tfrac{\pi}{4}\rho s^2$.
+$`(m+m_a)\dot{U}=T-k\,U|U|-c\,U`$, with $T=\tfrac{1}{2}m_f\left(\dot{h}^2-U^2h'^2\right)$, $m_f=\tfrac{\pi}{4}\rho s^2$.
 
 $T$ is Lighthill's elongated-body thrust from the fin tip's sideways velocity
 $\dot{h}$ and slope $h'$ (fin span $s=0.13$ m). It shrinks as the fish speeds up and
@@ -301,7 +301,7 @@ The saved map (`maps/`) with the path Swishy swam on one patrol (blue), the four
 patrol stations (orange) and its start pose (aqua). SLAM Toolbox builds a 5 cm
 occupancy grid from the LiDAR by scan matching and pose-graph optimization with
 loop closure, conceptually
-$\mathbf{x}^{*}=\arg\min_{\mathbf{x}}\sum_k\lVert\mathbf{r}_k(\mathbf{x})\rVert_{\Omega_k}^{2}$.
+$`\mathbf{x}^{*}=\arg\min_{\mathbf{x}}\sum_k\lVert\mathbf{r}_k(\mathbf{x})\rVert_{\Omega_k}^{2}`$.
 Dark cells are walls and obstacles; the rounded shapes are the pump (mapped when
 it was still a 0.3 m box), the cylinder,
 the centrepiece and the tank's own rocks and coral.
@@ -367,43 +367,53 @@ the [references](#references) below.
 tail with an amplitude that grows toward the tail, as in carangiform swimming
 [1, 2]. Swishy samples that wave at its three tail joints:
 
-$$q_i(t)=b_i\,\kappa+a_i\,A\,\sin\!\big(\phi(t)-(i-1)\,\Delta\phi\big),\qquad \dot\phi=2\pi f,\qquad i=1,2,3 \tag{1}$$
+```math
+q_i(t)=b_i\,\kappa+a_i\,A\,\sin\!\big(\phi(t)-(i-1)\,\Delta\phi\big),\qquad \dot\phi=2\pi f,\qquad i=1,2,3 \tag{1}
+```
 
-with amplitude envelope $a=(0.45,\,0.72,\,1.0)$, turning envelope
-$b=(0.35,\,0.65,\,1.0)$ and phase lag $\Delta\phi=\pi/3$.
+with amplitude envelope $`a=(0.45,\,0.72,\,1.0)`$, turning envelope
+$`b=(0.35,\,0.65,\,1.0)`$ and phase lag $\Delta\phi=\pi/3$.
 
 **Gait schedule.** An activity level $\alpha\in[0,1]$ sets the beat. As in real
 fish, the frequency rises with speed while the amplitude stays near constant [3, 4]:
 
-$$f=f_{\min}+(f_{\max}-f_{\min})\,\alpha,\qquad A=A_{\max}\,\sigma\,\big(r+(1-r)\,\alpha\big),\qquad \sigma=\min(1,\alpha/0.15),\qquad \kappa=\kappa_{\max}\,\frac{\omega}{\omega_{\max}} \tag{2}$$
+```math
+f=f_{\min}+(f_{\max}-f_{\min})\,\alpha,\qquad A=A_{\max}\,\sigma\,\big(r+(1-r)\,\alpha\big),\qquad \sigma=\min(1,\alpha/0.15),\qquad \kappa=\kappa_{\max}\,\frac{\omega}{\omega_{\max}} \tag{2}
+```
 
 with $f_{\min}=1.2$ Hz, $f_{\max}=2.4$ Hz, $A_{\max}=0.55$ rad, $r=0.6$,
 $\kappa_{\max}=0.28$ rad and $\omega_{\max}=1.5$ rad/s.
 
-**Fin-tip kinematics.** For tail segments of length $\ell=(0.050,\,0.0495,\,0.102)$ m,
+**Fin-tip kinematics.** For tail segments of length $`\ell=(0.050,\,0.0495,\,0.102)`$ m,
 measured from the meshes, the fin tip's sideways offset $h$ and slope $h'$ in the
 body frame are
 
-$$\theta_k=\sum_{j\le k}q_j,\qquad h=\sum_{k=1}^{3}\ell_k\sin\theta_k,\qquad h'=\tan\theta_3 \tag{3}$$
+```math
+\theta_k=\sum_{j\le k}q_j,\qquad h=\sum_{k=1}^{3}\ell_k\sin\theta_k,\qquad h'=\tan\theta_3 \tag{3}
+```
 
 **Thrust: Lighthill's elongated-body theory** [5, 6]. A slender swimmer pushes
 water sideways at its trailing edge, and the reaction gives a forward thrust:
 
-$$T=\tfrac{1}{2}\,m_f\left(\dot h^{2}-U^{2}h'^{2}\right),\qquad m_f=\tfrac{\pi}{4}\,\rho\,s^{2} \tag{4}$$
+```math
+T=\tfrac{1}{2}\,m_f\left(\dot h^{2}-U^{2}h'^{2}\right),\qquad m_f=\tfrac{\pi}{4}\,\rho\,s^{2} \tag{4}
+```
 
 $m_f$ is the fluid mass per metre carried by the fin (added mass of a flat plate of
 span $s$). With $\rho=1000$ kg/m³ and $s=0.13$ m, $m_f=13.3$ kg/m. The thrust falls
-as the fish speeds up and vanishes when $U=|\dot h/h'|$, the speed of the body wave
+as the fish speeds up and vanishes when $`U=|\dot h/h'|`$, the speed of the body wave
 itself. Swishy uses the instantaneous form, clamps it at zero, smooths it over
 0.2 s (about half a beat) and keeps only the swimming share of the beat:
-$T_{\text{eff}}=\eta\,T$, where $\eta=e/\alpha$ is the speed loop's effort over the
+$`T_{\text{eff}}=\eta\,T`$, where $\eta=e/\alpha$ is the speed loop's effort over the
 total activity, so a hard turning beat does not add forward speed.
 
 **Surge dynamics** [7]. Forward speed $U$ follows a one-degree-of-freedom balance
 of thrust against linear and quadratic drag, in the style of Fossen's
 marine-craft models:
 
-$$(m+m_a)\,\dot U=T_{\text{eff}}-\beta\,k\,U|U|-c\,U \tag{5}$$
+```math
+(m+m_a)\,\dot U=T_{\text{eff}}-\beta\,k\,U|U|-c\,U \tag{5}
+```
 
 with $m=0.43$ kg, surge added mass $m_a=0.05$ kg and $c=0.3$ N·s/m. The factor
 $\beta$ models fin braking: $\beta$ rises from 1 to 4 as the fish exceeds the
@@ -413,7 +423,9 @@ is told to stop (hovering).
 **Drag calibration.** $k$ is chosen so the full-power gait balances just above the
 navigation speed limit, $U_{\text{top}}=1.2\times0.5$ m/s:
 
-$$k=\frac{\overline{T}(U_{\text{top}})-c\,U_{\text{top}}}{U_{\text{top}}^{2}}\approx19.2\ \text{N·s}^2/\text{m}^2 \tag{6}$$
+```math
+k=\frac{\overline{T}(U_{\text{top}})-c\,U_{\text{top}}}{U_{\text{top}}^{2}}\approx19.2\ \text{N·s}^2/\text{m}^2 \tag{6}
+```
 
 where $\overline{T}$ is Eq. (4) averaged over one beat at $\alpha=1$
 (7.1 N at 0.6 m/s).
@@ -422,7 +434,9 @@ where $\overline{T}$ is Eq. (4) averaged over one beat at $\alpha=1$
 few 20 ms steps), so each step solves Eq. (5) backward-Euler for the new speed
 $U'$, which is the positive root of a quadratic:
 
-$$k\beta\,\Delta t\,U'^{2}+(M+c\,\Delta t)\,U'-\big(M U+T_{\text{eff}}\,\Delta t\big)=0,\qquad M=m+m_a \tag{7}$$
+```math
+k\beta\,\Delta t\,U'^{2}+(M+c\,\Delta t)\,U'-\big(M U+T_{\text{eff}}\,\Delta t\big)=0,\qquad M=m+m_a \tag{7}
+```
 
 (mirrored for negative momentum). Explicit Euler oscillated and diverged at
 these values.
@@ -431,18 +445,24 @@ these values.
 error sets the beat effort, with feed-forward from the commanded share of top
 speed:
 
-$$e=\frac{|U_{\text{cmd}}|}{U_{\text{top}}}+K_p\,\frac{|U_{\text{cmd}}|-|U|}{U_{\max}}+K_i\int\frac{|U_{\text{cmd}}|-|U|}{U_{\max}}\,dt,\qquad \alpha=\max\!\big(e,\;0.55\,|\omega|/\omega_{\max}\big) \tag{8}$$
+```math
+e=\frac{|U_{\text{cmd}}|}{U_{\text{top}}}+K_p\,\frac{|U_{\text{cmd}}|-|U|}{U_{\max}}+K_i\int\frac{|U_{\text{cmd}}|-|U|}{U_{\max}}\,dt,\qquad \alpha=\max\!\big(e,\;0.55\,|\omega|/\omega_{\max}\big) \tag{8}
+```
 
 with $K_p=2.0$, $K_i=1.5$ (integral clamped to ±0.5) and $U_{\max}=0.5$ m/s.
 
 **Planar motion.** The speed drives the body through three planar joints:
 
-$$\dot x=U\cos\psi,\qquad \dot y=U\sin\psi,\qquad \dot\psi=\omega \tag{9}$$
+```math
+\dot x=U\cos\psi,\qquad \dot y=U\sin\psi,\qquad \dot\psi=\omega \tag{9}
+```
 
 **Strouhal number** [9, 10, 11]. A check on the gait, published on
 `/swim/strouhal`:
 
-$$St=\frac{f\,A_{pp}}{U} \tag{10}$$
+```math
+St=\frac{f\,A_{pp}}{U} \tag{10}
+```
 
 where $A_{pp}$ is the fin tip's peak-to-peak sweep. Efficient swimmers cruise at
 $0.2<St<0.4$ [9]. Swishy reads about 1, because its cartoon tail swings wider than
@@ -459,25 +479,33 @@ calibrated to the gait, not measured on a physical fish.
 **State estimation** [12]. `robot_localization` fuses the planar-joint odometry
 and the IMU with an extended Kalman filter:
 
-$$\hat x_{k|k-1}=f(\hat x_{k-1}),\quad P_{k|k-1}=F P_{k-1} F^{\top}+Q,\quad K=P_{k|k-1}H^{\top}\big(HP_{k|k-1}H^{\top}+R\big)^{-1},\quad \hat x_k=\hat x_{k|k-1}+K\big(z_k-h(\hat x_{k|k-1})\big) \tag{11}$$
+```math
+\hat x_{k|k-1}=f(\hat x_{k-1}),\quad P_{k|k-1}=F P_{k-1} F^{\top}+Q,\quad K=P_{k|k-1}H^{\top}\big(HP_{k|k-1}H^{\top}+R\big)^{-1},\quad \hat x_k=\hat x_{k|k-1}+K\big(z_k-h(\hat x_{k|k-1})\big) \tag{11}
+```
 
 **Mapping** [13, 14]. SLAM Toolbox builds a pose graph from scan matching and loop
 closures and solves for the poses $x$ that best agree with all relative
 measurements $z_{ij}$:
 
-$$x^{*}=\arg\min_{x}\sum_{(i,j)}e_{ij}^{\top}\,\Omega_{ij}\,e_{ij},\qquad e_{ij}=z_{ij}\ominus\left(x_i^{-1}\oplus x_j\right) \tag{12}$$
+```math
+x^{*}=\arg\min_{x}\sum_{(i,j)}e_{ij}^{\top}\,\Omega_{ij}\,e_{ij},\qquad e_{ij}=z_{ij}\ominus\left(x_i^{-1}\oplus x_j\right) \tag{12}
+```
 
 **Costmap inflation** [15, 16]. Nav2's inflation layer lets cost decay
 exponentially with distance $d$ from the nearest obstacle, beyond the robot's
 inscribed radius $r_{\text{in}}=0.22$ m:
 
-$$C(d)=252\,e^{-\gamma\,(d-r_{\text{in}})},\qquad \gamma=3.0,\qquad d\le0.70\ \text{m} \tag{13}$$
+```math
+C(d)=252\,e^{-\gamma\,(d-r_{\text{in}})},\qquad \gamma=3.0,\qquad d\le0.70\ \text{m} \tag{13}
+```
 
 **Local control** [17]. The DWB controller samples velocities $(v,\omega)$ reachable
 within its acceleration limits (the dynamic window), simulates each for 1.7 s and
 picks the one with the lowest weighted critic cost:
 
-$$(v,\omega)^{*}=\arg\min_{(v,\omega)\in V_d}\sum_{c}w_c\,C_c(v,\omega) \tag{14}$$
+```math
+(v,\omega)^{*}=\arg\min_{(v,\omega)\in V_d}\sum_{c}w_c\,C_c(v,\omega) \tag{14}
+```
 
 with critics for path alignment and distance, goal alignment and distance,
 rotation to goal, oscillation and obstacles.
@@ -487,30 +515,38 @@ rotation to goal, oscillation and obstacles.
 **Water surface: Gerstner waves** [18, 19]. Three waves move each surface vertex
 $P_0$ along circular orbits (implementation adapted from VRX):
 
-$$P=P_0+\sum_{i=1}^{3}\Big(-q_i\,a_i\,\mathbf d_i\sin\theta_i,\;\;a_i\cos\theta_i\Big),\qquad \theta_i=k_i\,(\mathbf d_i\cdot P_0)-\Omega_i t \tag{15}$$
+```math
+P=P_0+\sum_{i=1}^{3}\Big(-q_i\,a_i\,\mathbf d_i\sin\theta_i,\;\;a_i\cos\theta_i\Big),\qquad \theta_i=k_i\,(\mathbf d_i\cdot P_0)-\Omega_i t \tag{15}
+```
 
-with steepness $q_i=0.6$, amplitude $a_i=(7,\,5,\,3)$ mm (ramped in as
-$1-e^{-t/\tau}$), wavenumber $k_i=(14,\,21,\,31.4)$ rad/m (wavelengths 0.45, 0.30 and
-0.20 m), direction $\mathbf d_i$ and angular frequency $\Omega_i=(4.2,\,5.3,\,6.6)$ rad/s,
+with steepness $q_i=0.6$, amplitude $`a_i=(7,\,5,\,3)`$ mm (ramped in as
+$1-e^{-t/\tau}$), wavenumber $`k_i=(14,\,21,\,31.4)`$ rad/m (wavelengths 0.45, 0.30 and
+0.20 m), direction $\mathbf d_i$ and angular frequency $`\Omega_i=(4.2,\,5.3,\,6.6)`$ rad/s,
 slower than deep-water dispersion $\Omega=\sqrt{gk}$ for a calm tank.
 
 **Reflection: Fresnel term** [20]. Reflection and water colour are blended with a
 Schlick-style power of the facing angle:
 
-$$F=\mathrm{clamp}\big((1-\mathbf n\cdot\mathbf v)^{p},\,0.05,\,1\big) \tag{16}$$
+```math
+F=\mathrm{clamp}\big((1-\mathbf n\cdot\mathbf v)^{p},\,0.05,\,1\big) \tag{16}
+```
 
 **Underwater fog: Beer–Lambert attenuation** [21]. Each of the 40 camera-centred
 shells, spaced $\delta=0.1$ m apart, adds $1-e^{-\sigma\delta}$ of fog colour, so an
 object $d$ away sits behind about $d/\delta$ shells and is tinted like exponential
 fog:
 
-$$\alpha_{\text{fog}}(d)\approx1-e^{-\sigma d} \tag{17}$$
+```math
+\alpha_{\text{fog}}(d)\approx1-e^{-\sigma d} \tag{17}
+```
 
 **Caustics: cellular noise** [22]. Bright lines are drawn where two Worley cells
 meet, i.e. where the gap between the nearest and second-nearest feature point is
 small:
 
-$$I=1-\mathrm{smoothstep}\big(0,\,w,\;F_2(\mathbf p)-F_1(\mathbf p)\big) \tag{18}$$
+```math
+I=1-\mathrm{smoothstep}\big(0,\,w,\;F_2(\mathbf p)-F_1(\mathbf p)\big) \tag{18}
+```
 
 Two layers at different scales and speeds and a gentle domain warp keep the
 pattern from looking tiled.
@@ -518,7 +554,9 @@ pattern from looking tiled.
 **Kelp sway.** A cantilever-like profile keeps the base fixed and grows the bend
 with height squared, so the tips move most:
 
-$$\Delta x=A_s\,(z/H)^{2}\sin(\Omega_s t+\varphi+2z) \tag{19}$$
+```math
+\Delta x=A_s\,(z/H)^{2}\sin(\Omega_s t+\varphi+2z) \tag{19}
+```
 
 with a per-plant phase $\varphi$ and a slightly different frequency for each plant.
 
